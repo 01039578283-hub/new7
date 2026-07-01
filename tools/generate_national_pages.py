@@ -27,6 +27,7 @@ FAQ_SOURCE = COMMON_ROOT / "FAQ.txt"
 REVIEW_SOURCE = COMMON_ROOT / "학부모 후기.txt"
 TARGET_SCHOOL_SOURCE = COMMON_ROOT / "타깃학교.csv"
 EDUCATIONAL_ORG_SOURCE = COMMON_ROOT / "EducationalOrganization.csv"
+REPRESENTATIVE_IMAGE_SOURCE = COMMON_ROOT / "대표 이미지 url.csv"
 CHILD_SLUGS = ["영어수학학원", "수학영어학원", "국영수학원"]
 
 
@@ -84,6 +85,42 @@ def stable_sample(items: list, count: int, key: str) -> list:
     while len(picked) < count:
         picked.append(rng.choice(items))
     return picked
+
+
+def load_representative_image_urls() -> list[str]:
+    if not REPRESENTATIVE_IMAGE_SOURCE.exists():
+        raise SystemExit(f"representative image source missing: {REPRESENTATIVE_IMAGE_SOURCE}")
+
+    urls: list[str] = []
+    seen: set[str] = set()
+    with REPRESENTATIVE_IMAGE_SOURCE.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.reader(handle)
+        for row in reader:
+            for cell in row:
+                match = re.search(r'src=["\']([^"\']+)["\']', cell or "", re.I)
+                if not match:
+                    continue
+                url = match.group(1).strip()
+                if not url or url in seen:
+                    continue
+                seen.add(url)
+                urls.append(url)
+
+    if not urls:
+        raise SystemExit(f"representative image urls not found: {REPRESENTATIVE_IMAGE_SOURCE}")
+    return urls
+
+
+REPRESENTATIVE_IMAGE_URLS = load_representative_image_urls()
+
+
+def representative_image_url(key: str) -> str:
+    rng = stable_rng(f"representative-image::{key}")
+    return REPRESENTATIVE_IMAGE_URLS[rng.randrange(len(REPRESENTATIVE_IMAGE_URLS))]
+
+
+def hidden_representative_image(title: str, src: str) -> str:
+    return f'<img src="{escape(src)}" alt="{escape(title)} {SITE_NAME} 대표" style="display:none;">'
 
 
 def load_faq_pool() -> list[tuple[str, str]]:
@@ -1099,6 +1136,7 @@ def render_hub(centers: list[Center]) -> str:
 
 
 def build_center_jsonld(center: Center, related: list[Center]) -> dict:
+    representative_url = representative_image_url(center.url)
     faq_items = center_faqs(center)
     review_items = center_reviews(center)
     school_info = school_info_for(center)
@@ -1163,8 +1201,8 @@ def build_center_jsonld(center: Center, related: list[Center]) -> dict:
             {
                 "@type": "ImageObject",
                 "@id": f"{center.url}#primaryimage",
-                "url": f"/assets/centers/common/{center.main_image_file}",
-                "caption": f"{center.title} 본문 이미지",
+                "url": representative_url,
+                "caption": f"{center.title} 대표 이미지",
             },
             {
                 "@type": "BreadcrumbList",
@@ -1229,7 +1267,7 @@ def build_center_jsonld(center: Center, related: list[Center]) -> dict:
                 "@id": f"{center.url}#article",
                 "headline": center.title,
                 "description": f"{center.area_phrase} 학생을 위한 전문학원 학습관리 안내입니다.",
-                "image": [f"/assets/centers/common/{center.main_image_file}", f"/assets/maps/{center.map_file}"],
+                "image": [representative_url, f"/assets/centers/common/{center.main_image_file}", f"/assets/maps/{center.map_file}"],
                 "inLanguage": "ko-KR",
                 "datePublished": PUBLISHED,
                 "dateModified": PUBLISHED,
@@ -1307,6 +1345,7 @@ def related_centers(centers: list[Center], center: Center, limit: int = 8) -> li
 def build_child_jsonld(center: Center, related: list[Center], slug: str) -> dict:
     title = child_title(center, slug)
     url = child_url(center, slug)
+    representative_url = representative_image_url(url)
     profile = child_profile(slug)
     topic = profile["topic"]
     faq_items = child_faqs(center, slug)
@@ -1369,8 +1408,8 @@ def build_child_jsonld(center: Center, related: list[Center], slug: str) -> dict
         {
             "@type": "ImageObject",
             "@id": f"{url}#primaryimage",
-            "url": f"/assets/centers/common/{center.main_image_file}",
-            "caption": f"{title} 본문 이미지",
+            "url": representative_url,
+            "caption": f"{title} 대표 이미지",
         },
         {
             "@type": "BreadcrumbList",
@@ -1435,7 +1474,7 @@ def build_child_jsonld(center: Center, related: list[Center], slug: str) -> dict
             "@id": f"{url}#article",
             "headline": title,
             "description": f"{center.area_phrase} 학생을 위한 {profile['page_type']} 상담 안내입니다.",
-            "image": [f"/assets/centers/common/{center.main_image_file}", f"/assets/maps/{center.map_file}"],
+            "image": [representative_url, f"/assets/centers/common/{center.main_image_file}", f"/assets/maps/{center.map_file}"],
             "inLanguage": "ko-KR",
             "datePublished": PUBLISHED,
             "dateModified": PUBLISHED,
@@ -1508,6 +1547,7 @@ def build_child_jsonld(center: Center, related: list[Center], slug: str) -> dict
 
 def render_center(center: Center, centers: list[Center]) -> str:
     related = related_centers(centers, center)
+    representative_url = representative_image_url(center.url)
     faq_cards = center_faqs(center)
     review_cards = center_reviews(center)
     school_info = school_info_for(center)
@@ -1545,7 +1585,7 @@ def render_center(center: Center, centers: list[Center]) -> str:
         description,
         "../../",
         center.url,
-        f"../../assets/centers/common/{center.main_image_file}",
+        representative_url,
         "article",
     )
     return f"""{head}
@@ -1588,6 +1628,7 @@ def render_center(center: Center, centers: list[Center]) -> str:
 
       <section class="section">
         <div class="container local-media-section">
+          {hidden_representative_image(center.title, representative_url)}
           <figure class="local-media-card">
             <img src="../../assets/centers/common/{center.main_image_file}" alt="{escape(center.title)} 본문 이미지">
           </figure>
@@ -1765,6 +1806,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
     profile = child_profile(slug)
     topic = profile["topic"]
     url = child_url(center, slug)
+    representative_url = representative_image_url(url)
     school_info = school_info_for(center)
     org_info = org_info_for(center)
     faq_cards = child_faqs(center, slug)
@@ -1800,7 +1842,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
         description,
         "../../../",
         url,
-        f"../../../assets/centers/common/{center.main_image_file}",
+        representative_url,
         "article",
     )
     return f"""{head}
@@ -1843,6 +1885,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
 
       <section class="section">
         <div class="container local-media-section">
+          {hidden_representative_image(title, representative_url)}
           <figure class="local-media-card">
             <img src="../../../assets/centers/common/{center.main_image_file}" alt="{escape(title)} 본문 이미지">
           </figure>
