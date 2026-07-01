@@ -1407,6 +1407,89 @@ h1,
   font-size: 20px;
 }
 
+.child-link-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.child-link-grid a {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-content: center;
+  justify-content: stretch;
+  min-height: 108px;
+  padding: 22px 54px 22px 22px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(255, 255, 255, 0.98), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f5fbff 52%, #e5f6ff 100%);
+  border: 1px solid rgba(53, 152, 210, 0.14);
+  box-shadow: 0 16px 36px rgba(37, 129, 184, 0.09);
+  gap: 8px;
+}
+
+.child-link-grid a::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  pointer-events: none;
+}
+
+.child-link-grid a::after {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--sky-500), var(--royal));
+  box-shadow: 0 10px 22px rgba(47, 126, 232, 0.18);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.child-link-grid a:hover {
+  transform: translateY(-3px);
+  border-color: rgba(47, 126, 232, 0.25);
+  box-shadow: 0 22px 48px rgba(37, 129, 184, 0.14);
+}
+
+.child-link-grid span {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--sky-700);
+  background: rgba(226, 247, 255, 0.92);
+  border: 1px solid rgba(53, 152, 210, 0.12);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+}
+
+.child-link-grid strong {
+  display: block;
+  color: var(--navy);
+  font-size: clamp(17px, 1.7vw, 20px);
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+
+.child-link-grid small {
+  color: #667c8c;
+  font-size: 13px;
+  font-weight: 850;
+}
+
 .bottom-nav-card {
   position: relative;
   overflow: hidden;
@@ -1869,6 +1952,35 @@ h1,
     min-height: 88px;
     padding: 18px 50px 18px 18px;
     border-radius: 22px;
+  }
+
+  .child-link-grid {
+    gap: 10px;
+  }
+
+  .child-link-grid a {
+    min-height: 86px;
+    padding: 18px 50px 18px 18px;
+    border-radius: 22px;
+  }
+
+  .child-link-grid a::before {
+    inset: 8px;
+    border-radius: 17px;
+  }
+
+  .child-link-grid span {
+    min-height: 22px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .child-link-grid strong {
+    font-size: 17px;
+  }
+
+  .child-link-grid small {
+    font-size: 12px;
   }
 
   .route-button-grid span {

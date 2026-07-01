@@ -819,7 +819,7 @@ def render_story_sections(center: Center, school_info: dict[str, object]) -> str
 
 def render_child_link_section(center: Center) -> str:
     links = "\n".join(
-        f'              <a href="{escape(slug)}/index.html"><span>{escape(child_title(center, slug))}</span><small>{escape(child_topic_label(slug))} 상세 안내</small></a>'
+        f'              <a href="{escape(slug)}/index.html"><span>{escape(child_topic_label(slug))}</span><strong>{escape(child_title(center, slug))}</strong><small>바로가기</small></a>'
         for slug in CHILD_SLUGS
     )
     return f"""
@@ -842,12 +842,12 @@ def render_child_link_section(center: Center) -> str:
 def render_bottom_nav(center: Center, slug: str | None = None) -> str:
     if slug:
         sibling_links = "\n".join(
-            f'              <a href="../{escape(item)}/index.html"><span>{escape(child_title(center, item))}</span><small>같은 동네 상세 페이지</small></a>'
+            f'              <a href="../{escape(item)}/index.html"><span>{escape(child_topic_label(item))}</span><strong>{escape(child_title(center, item))}</strong><small>바로가기</small></a>'
             for item in CHILD_SLUGS
             if item != slug
         )
         if not sibling_links:
-            sibling_links = f'              <a href="../index.html"><span>{escape(center.name)} 기본 안내</span><small>동네 상위 페이지</small></a>'
+            sibling_links = f'              <a href="../index.html"><span>기본</span><strong>{escape(center.name)} 안내</strong><small>바로가기</small></a>'
         return f"""
       <section class="section bottom-nav-section">
         <div class="container">
@@ -867,7 +867,7 @@ def render_bottom_nav(center: Center, slug: str | None = None) -> str:
       </section>"""
 
     child_links = "\n".join(
-        f'              <a href="{escape(item)}/index.html"><span>하위</span><strong>{escape(child_title(center, item))}</strong><small>{escape(child_topic_label(item))} 상세 안내</small></a>'
+        f'              <a href="{escape(item)}/index.html"><span>{escape(child_topic_label(item))}</span><strong>{escape(child_title(center, item))}</strong><small>바로가기</small></a>'
         for item in CHILD_SLUGS
     )
     return f"""
@@ -1879,7 +1879,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
     school_section = render_school_section(center, school_info, title)
     bottom_nav = render_bottom_nav(center, slug)
     related_links = "\n".join(
-        f'              <a href="../../{escape(item.name)}/{escape(slug)}/index.html"><span>{escape(child_title(item, slug))}</span><small>{escape(item.locality or item.region)} 상세 안내</small></a>'
+        f'              <a href="../../{escape(item.name)}/{escape(slug)}/index.html"><span>{escape(item.locality or item.region)}</span><strong>{escape(child_title(item, slug))}</strong><small>바로가기</small></a>'
         for item in related
     )
     faq_html = "\n".join(
@@ -2165,7 +2165,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
             <p class="section-desc">{escape(profile['internal_desc'])}</p>
           </div>
           <div class="local-link-grid child-link-grid">
-              <a href="../index.html"><span>{escape(center.title)}</span><small>부모 동네페이지</small></a>
+              <a href="../index.html"><span>기본 안내</span><strong>{escape(center.title)}</strong><small>바로가기</small></a>
 {related_links}
           </div>
         </div>
