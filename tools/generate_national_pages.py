@@ -902,8 +902,8 @@ def footer() -> str:
           <p>학생별 진도 수업과 공부 습관 코칭을 함께 운영합니다.</p>
         </div>
         <div>
-          <strong>상담 전화</strong>
-          <p>{PHONE_DISPLAY}</p>
+          <strong>상담 문의</strong>
+          <p>전화·문자 상담으로 학습 상황을 확인합니다.</p>
         </div>
       </div>
     </footer>"""
@@ -1575,8 +1575,8 @@ def render_center(center: Center, centers: list[Center]) -> str:
             </div>
           </div>
           <aside class="quick-stat-card">
-            <span>상담 전화</span>
-            <strong>{PHONE_DISPLAY}</strong>
+            <span>상담 안내</span>
+            <strong>전화·문자 상담 가능</strong>
             <p>수업 가능 여부와 세부 운영 방식은 상담 시 현재 상황에 맞춰 확인해 주세요.</p>
             <div class="hero-actions">
               <a class="button button-soft" href="tel:{PHONE_TEL}">전화하기</a>
@@ -1672,7 +1672,7 @@ def render_center(center: Center, centers: list[Center]) -> str:
           <h2>{escape(center.title)} 센터 기준 정보</h2>
           <p><strong>{escape(center_name)}</strong> 기준으로 {escape(center.name)} 학생 상담 흐름을 정리했습니다. 주소 자료는 상담 전 위치와 생활권을 확인하기 위한 참고 정보로 활용됩니다.</p>
           <p>주소: {escape(address)}</p>
-          <p>운영 시간: {escape(hours)} · 상담 전화: {PHONE_DISPLAY}</p>
+          <p>운영 시간: {escape(hours)} · 상담은 학생 상황 확인 후 안내됩니다.</p>
         </div>
       </section>
 
@@ -1744,7 +1744,7 @@ def render_center(center: Center, centers: list[Center]) -> str:
             <h2>{escape(center.title)} 상담 전, 아이의 공부 흐름을 먼저 정리해보세요.</h2>
             <p>학습 상담은 현재 상태를 정확히 보는 것부터 시작합니다. 성적표보다 중요한 것은 어느 지점에서 공부가 끊기는지, 어떤 오답이 반복되는지, 계획이 실제로 실행되는지입니다.</p>
             <div class="hero-actions">
-              <a class="button button-primary" href="tel:{PHONE_TEL}">전화 상담 {PHONE_DISPLAY}</a>
+              <a class="button button-primary" href="tel:{PHONE_TEL}">전화 상담</a>
               <a class="button button-soft" href="../../학습가이드/index.html">학습가이드 보기</a>
             </div>
           </div>
@@ -1830,8 +1830,8 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
             </div>
           </div>
           <aside class="quick-stat-card">
-            <span>상담 전화</span>
-            <strong>{PHONE_DISPLAY}</strong>
+            <span>상담 안내</span>
+            <strong>전화·문자 상담 가능</strong>
             <p>{escape(center.name)} 학생의 {escape(profile['subject_pair'])}의 현재 단원, 학교 진도, 시험 준비 흐름을 상담 시 함께 확인합니다.</p>
             <div class="hero-actions">
               <a class="button button-soft" href="tel:{PHONE_TEL}">전화하기</a>
@@ -1998,7 +1998,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
           <h2>{escape(title)} 센터 기준 정보</h2>
           <p><strong>{escape(center_name)}</strong> 기준으로 {escape(center.name)} 학생 상담 흐름을 정리했습니다. 주소 자료는 상담 전 위치와 생활권을 확인하기 위한 참고 정보로 활용됩니다.</p>
           <p>주소: {escape(address)}</p>
-          <p>운영 시간: {escape(hours)} · 상담 전화: {PHONE_DISPLAY}</p>
+          <p>운영 시간: {escape(hours)} · 상담은 학생 상황 확인 후 안내됩니다.</p>
         </div>
       </section>
 
@@ -2072,7 +2072,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
             <h2>{escape(title)} 상담 전, {escape(profile['cta_heading'])}</h2>
             <p>{escape(profile['cta_body'])}</p>
             <div class="hero-actions">
-              <a class="button button-primary" href="tel:{PHONE_TEL}">전화 상담 {PHONE_DISPLAY}</a>
+              <a class="button button-primary" href="tel:{PHONE_TEL}">전화 상담</a>
               <a class="button button-soft" href="../../../학습가이드/index.html">학습가이드 보기</a>
             </div>
           </div>
