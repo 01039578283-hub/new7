@@ -9,9 +9,11 @@ import shutil
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
+from urllib.parse import quote
 
 
 SITE_NAME = "학습관리학원"
+BASE_URL = "https://xn--zb0b93vh4ggmeqzwda.com"
 PHONE_DISPLAY = "010-6839-8283"
 PHONE_TEL = "01068398283"
 PHONE_SCHEMA = "+82-10-6839-8283"
@@ -28,7 +30,7 @@ REVIEW_SOURCE = COMMON_ROOT / "학부모 후기.txt"
 TARGET_SCHOOL_SOURCE = COMMON_ROOT / "타깃학교.csv"
 EDUCATIONAL_ORG_SOURCE = COMMON_ROOT / "EducationalOrganization.csv"
 REPRESENTATIVE_IMAGE_SOURCE = COMMON_ROOT / "대표 이미지 url.csv"
-CHILD_SLUGS = ["영어수학학원", "수학영어학원", "국영수학원"]
+CHILD_SLUGS = ["영어수학학원", "수학영어학원", "국영수학원", "소수정예학원"]
 
 
 @dataclass
@@ -343,10 +345,52 @@ def child_topic_label(slug: str) -> str:
         return "수학·영어"
     if slug == "국영수학원":
         return "국어·영어·수학"
+    if slug == "소수정예학원":
+        return "소수정예 관리"
     return slug
 
 
 def child_profile(slug: str) -> dict[str, str]:
+    if slug == "소수정예학원":
+        return {
+            "pair": "소수정예",
+            "page_type": "소수정예학원",
+            "topic": "소수정예 학습관리",
+            "primary": "개별 진단",
+            "secondary": "밀착 피드백",
+            "primary_with_topic": "개별 진단은",
+            "secondary_with_topic": "밀착 피드백은",
+            "subject_pair": "소수정예 학습관리",
+            "subject_pair_object": "소수정예 학습관리를",
+            "subject_kind": "개별 관리",
+            "subject_count_label": "소수정예",
+            "primary_scope": "현재 단원, 학교 진도, 반복 오답, 학습 습관 진단",
+            "secondary_scope": "수업 중 이해 확인, 플래너 점검, 과제 피드백, 재학습 연결",
+            "primary_scope_object": "현재 단원, 학교 진도, 반복 오답, 학습 습관 진단을",
+            "secondary_scope_object": "수업 중 이해 확인, 플래너 점검, 과제 피드백, 재학습 연결을",
+            "guide_kicker": "Small Group Coaching",
+            "guide_heading": "인원이 적은 수업일수록 학생별 막힘을 더 빨리 발견해야 합니다.",
+            "parent_question": "우리 아이가 큰 반보다 소수정예 환경이 맞는지",
+            "main_reason": "소수정예 수업은 단순히 인원만 적은 수업이 아니라, 학생이 어디서 멈추는지 확인하고 바로 질문·풀이·오답 재학습으로 연결하는 관리 방식이 중요합니다.",
+            "priority": "학생의 현재 단원과 학교 진도, 반복되는 오답 유형을 먼저 확인한 뒤 수업 중 피드백과 과제 점검이 이어지는지 함께 봅니다.",
+            "summary_primary_title": "학생별 진단",
+            "summary_primary_text": "현재 단원, 학교 진도, 최근 시험지, 과제 수행 습관을 기준으로 학생별 출발점을 확인합니다.",
+            "summary_secondary_title": "밀착 피드백",
+            "summary_secondary_text": "수업 중 이해 여부, 질문 빈도, 오답 재풀이, 플래너 실행 흐름을 짧은 주기로 점검합니다.",
+            "recommended_1_title": "대형 수업에서 질문을 잘 못 하고 넘어가는 학생",
+            "recommended_1_text": "모르는 부분을 숨기지 않도록 수업 중 확인 질문과 짧은 피드백을 반복해 학습 공백을 줄입니다.",
+            "recommended_2_title": "혼자 공부하면 계획이 자주 흐트러지는 학생",
+            "recommended_2_text": "주간 플래너와 과제 완료 여부를 함께 확인해 공부량보다 실행 흐름을 먼저 안정시킵니다.",
+            "answer_question": "소수정예학원을 고를 때 무엇을 먼저 봐야 할까요?",
+            "answer_body": "소수정예학원은 인원이 적다는 점만으로 판단하기보다, 학생의 이해도를 수업 중에 어떻게 확인하는지, 과제와 오답 피드백이 다음 수업으로 어떻게 이어지는지 봐야 합니다. 상담에서는 현재 단원, 학교 진도, 최근 시험지와 반복 오답을 함께 확인해 학생에게 맞는 관리 밀도를 정리합니다.",
+            "check_1": "최근 시험지, 현재 교재, 학교 진도, 반복해서 틀리는 문제 유형을 준비해 주세요.",
+            "check_2": "수업 중 질문을 어려워하는지, 과제를 미루는지, 플래너 실행이 끊기는지 알려주세요.",
+            "review_heading_suffix": "소수정예 학부모 상담 후기",
+            "related_heading_suffix": "주변 소수정예학원도 함께 보기",
+            "internal_desc": "같은 시군구와 가까운 지역의 소수정예 상담 페이지로 자연스럽게 이동할 수 있게 정리했습니다.",
+            "cta_heading": "우리 아이에게 필요한 관리 밀도를 먼저 확인해보세요.",
+            "cta_body": "소수정예 수업은 학생의 성향과 학습 습관을 세밀하게 보는 데서 강점이 생깁니다. 최근 시험지, 현재 교재, 학교 진도, 과제 습관, 질문 태도를 알려주시면 상담에서 더 현실적인 수업 방향을 잡을 수 있습니다.",
+        }
     if slug == "국영수학원":
         return {
             "pair": "국영수",
@@ -946,7 +990,28 @@ def footer() -> str:
     </footer>"""
 
 
+def absolute_url(path_or_url: str) -> str:
+    if path_or_url.startswith(("https://", "http://")):
+        return path_or_url
+    if not path_or_url.startswith("/"):
+        path_or_url = "/" + path_or_url
+    return BASE_URL + quote(path_or_url, safe="/:%#?=&")
+
+
+def absolute_image_url(path_or_url: str) -> str:
+    if path_or_url.startswith(("https://", "http://")):
+        return path_or_url
+    normalized = path_or_url
+    while normalized.startswith("../"):
+        normalized = normalized[3:]
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    return absolute_url(normalized)
+
+
 def base_head(title: str, description: str, css_prefix: str, canonical: str, image: str, og_type: str = "website") -> str:
+    canonical_url = absolute_url(canonical)
+    image_url = absolute_image_url(image)
     return f"""<!doctype html>
 <html lang="ko">
 <head>
@@ -955,13 +1020,13 @@ def base_head(title: str, description: str, css_prefix: str, canonical: str, ima
   <title>{escape(title)}</title>
   <meta name="description" content="{escape(description)}">
   <meta name="robots" content="index,follow,max-image-preview:large">
-  <link rel="canonical" href="{canonical}">
+  <link rel="canonical" href="{canonical_url}">
   <meta name="theme-color" content="#dff5ff">
   <meta property="og:title" content="{escape(title)}">
   <meta property="og:description" content="{escape(description)}">
   <meta property="og:type" content="{og_type}">
-  <meta property="og:url" content="{canonical}">
-  <meta property="og:image" content="{image}">
+  <meta property="og:url" content="{canonical_url}">
+  <meta property="og:image" content="{image_url}">
   <link rel="icon" href="{css_prefix}assets/favicon.png">
   <link rel="stylesheet" href="{css_prefix}assets/site.css">"""
 
