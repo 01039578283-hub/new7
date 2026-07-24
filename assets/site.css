@@ -2102,7 +2102,7 @@ h1,
    their existing content layout and SEO presentation. */
 .general-page {
   --general-navy: #10243e;
-  --general-blue: #2f73da;
+  --general-blue: #2864be;
   --general-blue-soft: #e9f1ff;
   --general-cyan: #64c7e9;
   --general-bg: #f5f7fb;
@@ -2276,7 +2276,7 @@ h1,
   gap: 4px;
   padding: 14px;
   border-left: 2px solid #b9cdf0;
-  color: #6c7a8d;
+  color: #5e6c7f;
   font-size: 12px;
   line-height: 1.45;
 }
