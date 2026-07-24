@@ -26,7 +26,7 @@ PATH_URL = "/" + quote(REL_DIR.as_posix(), safe="/") + "/"
 CANONICAL = DOMAIN + PATH_URL
 
 REP_IMAGE = f"{DOMAIN}/assets/generated/academy-hero-v2.webp"
-CENTER_IMAGE = "../../../assets/centers/common/local6839.jpg"
+CENTER_IMAGE = "../../../assets/centers/common/local6839.webp"
 MAP_IMAGE = "../../../assets/maps/buldangdong.jpg"
 
 

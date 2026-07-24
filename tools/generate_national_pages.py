@@ -49,7 +49,7 @@ class Center:
 
     @property
     def main_image_file(self) -> str:
-        return "seoul6839.jpg" if self.is_seoul else "local6839.jpg"
+        return "seoul6839.webp" if self.is_seoul else "local6839.webp"
 
     @property
     def area_phrase(self) -> str:
