@@ -2606,7 +2606,7 @@ h1,
   box-shadow: none;
 }
 
-.general-page .site-footer {
+  .general-page .site-footer {
   padding-top: 34px;
 }
 
@@ -2826,7 +2826,388 @@ h1,
     font-size: 12px;
   }
 
-  .general-page .site-footer {
+.general-page .site-footer {
     padding-bottom: 96px;
+  }
+}
+
+/* Nationwide directory renewal
+   Scoped to the top-level directory so local and child pages keep their
+   established content presentation. */
+.general-directory .local-hero {
+  padding: 52px 0 28px;
+  background: none;
+}
+
+.general-directory .local-hero-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.65fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.general-directory .local-hero-grid > * {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.general-directory .local-hero-card,
+.general-directory .quick-stat-card {
+  border: 1px solid var(--general-line);
+  border-radius: 24px;
+  box-shadow: 0 20px 55px rgba(16, 36, 62, 0.08);
+}
+
+.general-directory .local-hero-card {
+  min-width: 0;
+  padding: 40px;
+  background: #fff;
+}
+
+.general-directory .local-hero-card > *,
+.general-directory .local-hero-card .page-title,
+.general-directory .local-hero-card .hero-copy {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.general-directory .local-hero-card .page-title,
+.general-directory .local-hero-card .hero-copy {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.general-directory .breadcrumb {
+  margin-bottom: 24px;
+  color: #718096;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.general-directory .breadcrumb a {
+  color: var(--general-blue);
+}
+
+.general-directory .local-hero-card .eyebrow {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+}
+
+.general-directory .local-hero-card .page-title {
+  max-width: 760px;
+  margin-bottom: 18px;
+}
+
+.general-directory .local-hero-card .hero-copy {
+  max-width: 760px;
+  margin: 0;
+}
+
+.general-directory .local-badges {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.general-directory .local-badges span {
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #dbe5f1;
+  border-radius: 9px;
+  color: #45566e;
+  background: #f7f9fc;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.general-directory .quick-stat-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px;
+  color: #fff;
+  background: var(--general-navy);
+}
+
+.general-directory .quick-stat-card span {
+  color: #9fc8ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.general-directory .quick-stat-card strong {
+  margin: 14px 0 8px;
+  font-size: clamp(46px, 6vw, 70px);
+  line-height: 1;
+}
+
+.general-directory .quick-stat-card p {
+  margin: 0;
+  color: #cad6e7;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.general-directory .child-link-grid a {
+  min-height: 104px;
+  border: 1px solid var(--general-line);
+  border-radius: 18px;
+  color: var(--general-navy);
+  background: #fff;
+  box-shadow: 0 14px 38px rgba(16, 36, 62, 0.07);
+}
+
+.general-directory .child-link-grid a::after {
+  color: var(--general-blue);
+  background: var(--general-blue-soft);
+}
+
+.general-directory .section-head > div {
+  flex: 1 1 620px;
+  min-width: 0;
+}
+
+.general-directory .section-head .section-desc {
+  flex: 0 1 500px;
+}
+
+.general-directory .directory-tools {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid var(--general-line);
+  border-radius: 18px;
+  background: #fff;
+}
+
+.general-directory .directory-search {
+  display: grid;
+  flex: 1 1 560px;
+  gap: 8px;
+  color: var(--general-navy);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.general-directory .directory-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 15px;
+  border: 1px solid #ccd8e7;
+  border-radius: 11px;
+  outline: none;
+  color: var(--general-navy);
+  background: #f8fafc;
+  font: inherit;
+  font-size: 15px;
+}
+
+.general-directory .directory-search input:focus {
+  border-color: var(--general-blue);
+  box-shadow: 0 0 0 3px rgba(40, 100, 190, 0.12);
+}
+
+.general-directory .directory-result {
+  flex: 0 0 auto;
+  margin: 0 4px 12px 0;
+  color: var(--general-blue);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.general-directory .region-directory-grid {
+  gap: 16px;
+}
+
+.general-directory .region-group {
+  padding: 24px;
+  border: 1px solid var(--general-line);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 16px 44px rgba(16, 36, 62, 0.06);
+}
+
+.general-directory .region-group::before {
+  display: none;
+}
+
+.general-directory .region-title-row {
+  margin-bottom: 10px;
+}
+
+.general-directory .region-title-row h3 {
+  color: var(--general-navy);
+  font-size: 21px;
+}
+
+.general-directory .region-title-row h3::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  content: "";
+  background: var(--general-blue);
+  box-shadow: none;
+}
+
+.general-directory .region-title-row span,
+.general-directory .district-title-row span {
+  min-height: 28px;
+  border: 1px solid #dbe5f1;
+  border-radius: 8px;
+  color: #53657c;
+  background: #f7f9fc;
+  font-size: 11px;
+}
+
+.general-directory .region-group > p {
+  color: var(--general-muted);
+}
+
+.general-directory .district-block-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.general-directory .district-block {
+  padding: 15px;
+  border: 1px solid #e2e8f1;
+  border-radius: 15px;
+  background: #f7f9fc;
+  box-shadow: none;
+}
+
+.general-directory .district-title-row {
+  border-bottom: 1px solid #e1e7f0;
+}
+
+.general-directory .district-title-row strong {
+  color: var(--general-navy);
+}
+
+.general-directory .region-pill-row {
+  grid-template-columns: repeat(auto-fill, minmax(134px, 1fr));
+  gap: 7px;
+}
+
+.general-directory .region-pill-row a {
+  min-height: 56px;
+  padding: 10px 34px 10px 11px;
+  border: 1px solid #dfe6ef;
+  border-radius: 11px;
+  color: var(--general-navy);
+  background: #fff;
+  box-shadow: none;
+}
+
+.general-directory .region-pill-row a span {
+  color: var(--general-navy);
+}
+
+.general-directory .region-pill-row a small {
+  color: #718096;
+  font-size: 11px;
+}
+
+.general-directory .region-pill-row a::after {
+  right: 9px;
+  width: 22px;
+  height: 22px;
+  color: var(--general-blue);
+  background: var(--general-blue-soft);
+}
+
+.general-directory .region-pill-row a:hover {
+  transform: translateY(-1px);
+  border-color: #aac4e8;
+  background: #f8fbff;
+  box-shadow: 0 10px 22px rgba(16, 36, 62, 0.07);
+}
+
+.general-directory [hidden] {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .general-directory .local-hero {
+    padding-top: 24px;
+  }
+
+  .general-directory .local-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .general-directory .local-hero-card {
+    padding: 28px;
+  }
+
+  .general-directory .quick-stat-card {
+    min-height: 190px;
+  }
+
+  .general-directory .directory-tools {
+    display: grid;
+    align-items: stretch;
+  }
+
+  .general-directory .directory-search {
+    display: grid;
+    flex: none;
+  }
+
+  .general-directory .directory-result {
+    margin: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .general-directory .container {
+    width: calc(100% - 24px);
+    max-width: calc(100vw - 24px);
+  }
+
+  .general-directory .local-hero-card {
+    padding: 22px;
+    border-radius: 18px;
+  }
+
+  .general-directory .local-hero-card .page-title {
+    font-size: 31px;
+    line-height: 1.18;
+  }
+
+  .general-directory .local-badges {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .general-directory .local-badges span {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .general-directory .quick-stat-card,
+  .general-directory .region-group {
+    padding: 20px;
+    border-radius: 17px;
+  }
+
+  .general-directory .district-block-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .general-directory .region-pill-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
