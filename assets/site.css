@@ -3211,3 +3211,414 @@ h1,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Nationwide pages use the same navy/white system as the home page.
+   Keep this scoped so generated local content and SEO markup stay intact. */
+.general-page.national-page .local-hero {
+  padding: 44px 0 24px;
+}
+
+.general-page.national-page .local-hero-grid {
+  gap: 22px;
+}
+
+.general-page.national-page .local-hero-card,
+.general-page.national-page .quick-stat-card,
+.general-page.national-page .local-media-card,
+.general-page.national-page .local-map-card,
+.general-page.national-page .geo-summary-card,
+.general-page.national-page .answer-box,
+.general-page.national-page .story-panel,
+.general-page.national-page .grade-story-card,
+.general-page.national-page .school-panel,
+.general-page.national-page .check-item,
+.general-page.national-page .review-card,
+.general-page.national-page .bottom-nav-card {
+  border: 1px solid var(--general-line);
+  box-shadow: 0 12px 34px rgba(20, 45, 78, 0.06);
+}
+
+.general-page.national-page .local-hero-card {
+  padding: 38px;
+  border-radius: 26px;
+  background: #fff;
+}
+
+.general-page.national-page .local-hero-card::after,
+.general-page.national-page .story-quote::after,
+.general-page.national-page .bottom-nav-card::before {
+  display: none;
+}
+
+.general-page.national-page .breadcrumb {
+  margin-bottom: 20px;
+  color: #65758a;
+  line-height: 1.55;
+}
+
+.general-page.national-page .breadcrumb a {
+  color: var(--general-blue);
+}
+
+.general-page.national-page .local-hero-card .eyebrow {
+  margin: 0;
+}
+
+.general-page.national-page .local-hero-card .page-title,
+.general-page.national-page .local-hero-card .hero-copy,
+.general-page.national-page .quick-stat-card strong,
+.general-page.national-page .quick-stat-card p {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.general-page.national-page .local-badges {
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.general-page.national-page .local-badges span {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #d7e1ef;
+  border-radius: 9px;
+  color: #355d8d;
+  background: #f4f7fc;
+  font-size: 12px;
+}
+
+.general-page.national-page .quick-stat-card {
+  align-content: center;
+  gap: 12px;
+  padding: 32px;
+  border-color: #203d62;
+  border-radius: 24px;
+  color: #fff;
+  background: var(--general-navy);
+  box-shadow: 0 18px 48px rgba(16, 36, 62, 0.18);
+}
+
+.general-page.national-page .quick-stat-card span {
+  color: #8fc4ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.general-page.national-page .quick-stat-card strong {
+  color: #fff;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.25;
+}
+
+.general-page.national-page .quick-stat-card p {
+  color: #c9d5e5;
+}
+
+.general-page.national-page .quick-stat-card .button-soft {
+  color: var(--general-navy);
+  background: #fff;
+  border-color: #fff;
+}
+
+.general-page.national-page .local-media-section {
+  gap: 16px;
+}
+
+.general-page.national-page .local-media-card,
+.general-page.national-page .local-map-card {
+  overflow: hidden;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.general-page.national-page .local-map-caption {
+  padding: 20px;
+  border-top: 1px solid var(--general-line);
+}
+
+.general-page.national-page .local-map-caption strong {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .local-map-caption span,
+.general-page.national-page .geo-summary-card p,
+.general-page.national-page .answer-box p,
+.general-page.national-page .story-copy p,
+.general-page.national-page .story-quote p,
+.general-page.national-page .grade-story-card p,
+.general-page.national-page .school-card p,
+.general-page.national-page .school-note,
+.general-page.national-page .review-card p,
+.general-page.national-page .bottom-nav-card p {
+  color: var(--general-muted);
+}
+
+.general-page.national-page .geo-summary-grid,
+.general-page.national-page .grade-story-grid,
+.general-page.national-page .review-grid,
+.general-page.national-page .checklist-grid {
+  gap: 12px;
+}
+
+.general-page.national-page .geo-summary-card,
+.general-page.national-page .grade-story-card,
+.general-page.national-page .check-item,
+.general-page.national-page .review-card {
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.general-page.national-page .geo-summary-card b,
+.general-page.national-page .grade-story-card strong,
+.general-page.national-page .review-card strong,
+.general-page.national-page .check-item {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .answer-box,
+.general-page.national-page .story-panel,
+.general-page.national-page .school-panel,
+.general-page.national-page .bottom-nav-card {
+  padding: 30px;
+  border-radius: 22px;
+  background: #fff;
+}
+
+.general-page.national-page .answer-box h2,
+.general-page.national-page .story-copy h2,
+.general-page.national-page .bottom-nav-card h2 {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .story-panel {
+  gap: 24px;
+}
+
+.general-page.national-page .story-quote {
+  padding: 20px;
+  border: 1px solid var(--general-line);
+  border-radius: 16px;
+  background: #f7f9fc;
+  box-shadow: none;
+}
+
+.general-page.national-page .story-quote span,
+.general-page.national-page .grade-story-card em,
+.general-page.national-page .school-meta-card b {
+  color: var(--general-blue);
+}
+
+.general-page.national-page .story-quote strong,
+.general-page.national-page .school-card strong {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .rec-story-panel {
+  gap: 24px;
+  padding: 32px;
+  border: 1px solid #203d62;
+  border-radius: 22px;
+  color: #fff;
+  background: var(--general-navy);
+  box-shadow: 0 18px 48px rgba(16, 36, 62, 0.16);
+}
+
+.general-page.national-page .rec-story-panel .section-kicker {
+  color: #8fc4ff;
+}
+
+.general-page.national-page .rec-story-panel h2 {
+  color: #fff;
+}
+
+.general-page.national-page .rec-story-list p {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.general-page.national-page .rec-story-list b {
+  color: #fff;
+}
+
+.general-page.national-page .rec-story-list span {
+  color: #c9d5e5;
+}
+
+.general-page.national-page .school-panel {
+  gap: 18px;
+}
+
+.general-page.national-page .school-meta-card {
+  border: 1px solid #203d62;
+  border-radius: 16px;
+  color: #fff;
+  background: var(--general-navy);
+  box-shadow: none;
+}
+
+.general-page.national-page .school-meta-card b {
+  color: #9fc8ff;
+}
+
+.general-page.national-page .school-meta-card span {
+  color: #d8e1ee;
+}
+
+.general-page.national-page .school-card,
+.general-page.national-page .school-note {
+  border-color: var(--general-line);
+  border-radius: 16px;
+  background: #f7f9fc;
+  box-shadow: none;
+}
+
+.general-page.national-page .soft-panel {
+  border-color: var(--general-line);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(20, 45, 78, 0.06);
+}
+
+.general-page.national-page .soft-panel details {
+  border-color: var(--general-line);
+  background: #f7f9fc;
+}
+
+.general-page.national-page .soft-panel summary {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .soft-panel details p {
+  color: var(--general-muted);
+  background: #fff;
+}
+
+.general-page.national-page .local-link-grid a,
+.general-page.national-page .child-link-grid a,
+.general-page.national-page .route-button-grid a {
+  border: 1px solid var(--general-line);
+  border-radius: 16px;
+  color: var(--general-navy);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(20, 45, 78, 0.06);
+}
+
+.general-page.national-page .child-link-grid a::before,
+.general-page.national-page .route-button-grid a::before {
+  display: none;
+}
+
+.general-page.national-page .local-link-grid a::after,
+.general-page.national-page .child-link-grid a::after,
+.general-page.national-page .route-button-grid a::after {
+  color: var(--general-blue);
+  background: var(--general-blue-soft);
+  box-shadow: none;
+}
+
+.general-page.national-page .child-link-grid span,
+.general-page.national-page .route-button-grid span {
+  color: #355d8d;
+  background: var(--general-blue-soft);
+  border-color: #d6e2f7;
+}
+
+.general-page.national-page .child-link-grid strong,
+.general-page.national-page .route-button-grid strong {
+  color: var(--general-navy);
+}
+
+.general-page.national-page .child-link-grid small,
+.general-page.national-page .route-button-grid small {
+  color: var(--general-muted);
+}
+
+.general-page.national-page :where(a, button, input, summary):focus-visible {
+  outline: 3px solid rgba(40, 100, 190, 0.28);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .general-page.national-page .local-hero-card,
+  .general-page.national-page .quick-stat-card {
+    padding: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .general-page.national-page .local-hero {
+    padding: 22px 0 12px;
+  }
+
+  .general-page.national-page .local-hero-card,
+  .general-page.national-page .quick-stat-card,
+  .general-page.national-page .answer-box,
+  .general-page.national-page .story-panel,
+  .general-page.national-page .rec-story-panel,
+  .general-page.national-page .school-panel,
+  .general-page.national-page .bottom-nav-card {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .general-page.national-page .local-hero-card .page-title {
+    font-size: 32px;
+    line-height: 1.16;
+  }
+
+  .general-page.national-page .local-badges {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .general-page.national-page .local-badges span {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .general-page.national-page .quick-stat-card {
+    min-height: 0;
+  }
+
+  .general-page.national-page .quick-stat-card strong {
+    font-size: 24px;
+  }
+
+  .general-page.national-page .local-media-section {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .general-page.national-page .local-media-card,
+  .general-page.national-page .local-map-card {
+    border: 1px solid var(--general-line);
+    border-radius: 18px;
+  }
+
+  .general-page.national-page .geo-summary-card,
+  .general-page.national-page .grade-story-card,
+  .general-page.national-page .check-item,
+  .general-page.national-page .review-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .general-page.national-page .local-link-grid a,
+  .general-page.national-page .child-link-grid a,
+  .general-page.national-page .route-button-grid a {
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .general-page.national-page *,
+  .general-page.national-page *::before,
+  .general-page.national-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

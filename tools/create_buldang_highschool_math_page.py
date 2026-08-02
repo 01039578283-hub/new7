@@ -262,7 +262,7 @@ def render_page() -> str:
   <link rel="stylesheet" href="../../../assets/site.css">
   <script type="application/ld+json">{schema}</script>
 </head>
-<body>
+<body class="general-page national-page national-local-page national-child-page">
   <div class="site-shell">
     <span class="cloud cloud-one"></span>
     <span class="cloud cloud-two"></span>
@@ -271,8 +271,8 @@ def render_page() -> str:
     <header class="site-header">
       <div class="container nav-wrap">
         <a class="brand" href="../../../index.html" aria-label="{SITE_NAME} 홈">
-          <span class="brand-mark">☁</span>
-          <span class="brand-text">{SITE_NAME}<small>진단부터 오답까지 부드럽게</small></span>
+          <span class="brand-mark">L</span>
+          <span class="brand-text">{SITE_NAME}<small>진단 · 계획 · 실행 · 재학습</small></span>
         </a>
         <nav class="nav-menu" aria-label="상단 메뉴">
           <a href="../../../index.html">홈</a>

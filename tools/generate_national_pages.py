@@ -1209,10 +1209,10 @@ def header(prefix: str, active: str) -> str:
     <header class="site-header">
       <div class="container nav-wrap">
         <a class="brand" href="{prefix}index.html" aria-label="{SITE_NAME} 홈">
-          <span class="brand-mark">☁</span>
+          <span class="brand-mark">L</span>
           <span class="brand-text">
             {SITE_NAME}
-            <small>진단부터 오답까지 부드럽게</small>
+            <small>진단 · 계획 · 실행 · 재학습</small>
           </span>
         </a>
         <nav class="nav-menu" aria-label="상단 메뉴">
@@ -1389,7 +1389,7 @@ def render_hub(centers: list[Center]) -> str:
     return f"""{head}
   <script type="application/ld+json">{jsonld_script(build_hub_jsonld(centers))}</script>
 </head>
-<body>
+<body class="general-page general-directory national-page national-hub">
   <div class="site-shell">
     <span class="cloud cloud-one"></span>
     <span class="cloud cloud-two"></span>
@@ -1429,6 +1429,13 @@ def render_hub(centers: list[Center]) -> str:
             </div>
             <p class="section-desc">지역을 고른 뒤 동네 페이지에서 상담 전 확인사항, 학년별 관리 포인트, FAQ와 학습 변화 확인 항목을 차분히 살펴볼 수 있습니다.</p>
           </div>
+          <div class="directory-tools">
+            <label class="directory-search" for="directory-search-input">
+              <span>동네 이름으로 찾기</span>
+              <input id="directory-search-input" type="search" inputmode="search" autocomplete="off" placeholder="예: 명일동, 불당동, 중계동">
+            </label>
+            <p class="directory-result" id="directory-result" aria-live="polite">전체 {len(centers)}개 동네</p>
+          </div>
           <div class="region-directory-grid">
 {''.join(group_html)}
           </div>
@@ -1452,6 +1459,43 @@ def render_hub(centers: list[Center]) -> str:
 {floating("../")}
 {footer()}
   </div>
+  <script>
+    (() => {{
+      const input = document.getElementById("directory-search-input");
+      const result = document.getElementById("directory-result");
+      const groups = Array.from(document.querySelectorAll(".region-group"));
+      if (!input || !result) return;
+
+      const updateDirectory = () => {{
+        const query = input.value.trim().toLocaleLowerCase("ko-KR");
+        let visibleCount = 0;
+
+        groups.forEach((group) => {{
+          let groupCount = 0;
+          group.querySelectorAll(".district-block").forEach((district) => {{
+            let districtCount = 0;
+            district.querySelectorAll(".region-pill-row a").forEach((link) => {{
+              const matches = !query || link.textContent.toLocaleLowerCase("ko-KR").includes(query);
+              link.hidden = !matches;
+              if (matches) {{
+                districtCount += 1;
+                groupCount += 1;
+                visibleCount += 1;
+              }}
+            }});
+            district.hidden = districtCount === 0;
+          }});
+          group.hidden = groupCount === 0;
+        }});
+
+        result.textContent = query
+          ? visibleCount + "개 동네가 검색되었습니다."
+          : "전체 " + visibleCount + "개 동네";
+      }};
+
+      input.addEventListener("input", updateDirectory);
+    }})();
+  </script>
 </body>
 </html>
 """
@@ -1911,7 +1955,7 @@ def render_center(center: Center, centers: list[Center]) -> str:
     return f"""{head}
   <script type="application/ld+json">{jsonld_script(build_center_jsonld(center, related))}</script>
 </head>
-<body>
+<body class="general-page national-page national-local-page">
   <div class="site-shell">
     <span class="cloud cloud-one"></span>
     <span class="cloud cloud-two"></span>
@@ -2167,7 +2211,7 @@ def render_child_page(center: Center, centers: list[Center], slug: str) -> str:
     return f"""{head}
   <script type="application/ld+json">{jsonld_script(build_child_jsonld(center, related, slug))}</script>
 </head>
-<body>
+<body class="general-page national-page national-local-page national-child-page">
   <div class="site-shell">
     <span class="cloud cloud-one"></span>
     <span class="cloud cloud-two"></span>
