@@ -18,10 +18,40 @@ def extract(pattern: str, source: str) -> str:
     return html.unescape(match.group(1).strip()) if match else ""
 
 
+def main_text(source: str) -> str:
+    """Return the complete visible main content as readable plain text.
+
+    Naver treats RSS as a content feed, so an item should contain more than
+    the short meta description.  Keeping the extraction in the generator also
+    means future builds automatically publish the latest page body.
+    """
+    match = re.search(r"<main\b[^>]*>([\s\S]*?)</main>", source, re.I)
+    fragment = match.group(1) if match else source
+    fragment = re.sub(
+        r"<(script|style|noscript|template)\b[^>]*>[\s\S]*?</\1>",
+        " ",
+        fragment,
+        flags=re.I,
+    )
+    fragment = re.sub(
+        r"</(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|h[1-6]|header|li|main|nav|ol|p|section|summary|table|tbody|td|tfoot|th|thead|tr|ul)\s*>",
+        "\n",
+        fragment,
+        flags=re.I,
+    )
+    fragment = re.sub(r"<br\s*/?>", "\n", fragment, flags=re.I)
+    fragment = re.sub(r"<[^>]+>", " ", fragment)
+    fragment = html.unescape(fragment).replace("\xa0", " ")
+    lines = [re.sub(r"\s+", " ", line).strip() for line in fragment.splitlines()]
+    return "\n".join(line for line in lines if line)
+
+
 def page_data(path: Path) -> dict[str, str]:
     source = path.read_text(encoding="utf-8")
     title = extract(r"<title>(.*?)</title>", source)
-    description = extract(r'<meta\s+name="description"\s+content="([^"]*)"', source)
+    meta_description = extract(r'<meta\s+name="description"\s+content="([^"]*)"', source)
+    body = main_text(source)
+    description = body or meta_description
     canonical = extract(r'<link\s+rel="canonical"\s+href="([^"]*)"', source)
     modified = datetime.fromtimestamp(path.stat().st_mtime).astimezone()
     return {
@@ -77,6 +107,8 @@ def main() -> None:
         f"    <link>{BASE_URL}/</link>",
         "    <description>학습관리 기준과 전국 지역별 상담 안내의 핵심 업데이트입니다.</description>",
         "    <language>ko-KR</language>",
+        "    <generator>학습관리학원 RSS Generator</generator>",
+        "    <ttl>60</ttl>",
         f'    <atom:link href="{BASE_URL}/rss.xml" rel="self" type="application/rss+xml" />',
         f"    <lastBuildDate>{escape(latest)}</lastBuildDate>",
     ]

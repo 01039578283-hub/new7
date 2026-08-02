@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import email.utils
 import html
 import json
 import re
@@ -256,14 +257,47 @@ def main() -> int:
     rss_path = ROOT / "rss.xml"
     try:
         rss_root = ET.parse(rss_path).getroot()
-        rss_links = [item.findtext("link", "") for item in rss_root.findall("./channel/item")]
+        rss_items = rss_root.findall("./channel/item")
+        rss_links = [item.findtext("link", "").strip() for item in rss_items]
         build_date = rss_root.findtext("./channel/lastBuildDate", "")
         if not 1 <= len(rss_links) <= 20:
             error("rss_item_count", len(rss_links))
+        if len(rss_links) != len(set(rss_links)):
+            error("rss_duplicate_link", rss_path)
         if any(link not in page_urls for link in rss_links):
             error("rss_noncanonical_link", rss_path)
+        if any(urlsplit(link).netloc != urlsplit(BASE_URL).netloc for link in rss_links):
+            error("rss_foreign_domain", rss_path)
         if not build_date:
             error("rss_last_build_missing", rss_path)
+        else:
+            try:
+                email.utils.parsedate_to_datetime(build_date)
+            except (TypeError, ValueError):
+                error("rss_invalid_last_build", build_date)
+        if rss_path.stat().st_size >= 10 * 1024 * 1024:
+            error("rss_size_limit", rss_path.stat().st_size)
+        for item in rss_items:
+            required = {
+                key: (item.findtext(key, "") or "").strip()
+                for key in ("title", "link", "guid", "description", "pubDate")
+            }
+            if any(not value for value in required.values()):
+                error("rss_item_required_field", required.get("link", "missing-link"))
+                continue
+            if required["guid"] != required["link"]:
+                error("rss_guid_link_mismatch", required["link"])
+            if len(required["description"]) < 500:
+                error("rss_body_too_short", required["link"])
+            try:
+                email.utils.parsedate_to_datetime(required["pubDate"])
+            except (TypeError, ValueError):
+                error("rss_invalid_pub_date", required["link"])
+        rss_discovery = f'{BASE_URL}/rss.xml'
+        for page in pages:
+            source = page.read_text(encoding="utf-8")
+            if 'type="application/rss+xml"' not in source or rss_discovery not in source:
+                error("rss_autodiscovery_missing", page)
     except (ET.ParseError, OSError) as exc:
         error("rss_parse", exc)
         rss_links = []
