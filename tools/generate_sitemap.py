@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 from xml.sax.saxutils import escape
@@ -41,14 +41,15 @@ def changefreq_for(url: str) -> str:
 
 
 def main() -> None:
-    urls = sorted(page_url(path) for path in ROOT.rglob("index.html"))
-    lastmod = date.today().isoformat()
+    pages = sorted(ROOT.rglob("index.html"), key=page_url)
 
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ]
-    for url in urls:
+    for path in pages:
+        url = page_url(path)
+        lastmod = datetime.fromtimestamp(path.stat().st_mtime).astimezone().isoformat(timespec="seconds")
         lines.extend(
             [
                 "  <url>",
@@ -62,7 +63,7 @@ def main() -> None:
     lines.append("</urlset>")
 
     (ROOT / "sitemap.xml").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(f"Generated sitemap.xml with {len(urls)} URLs")
+    print(f"Generated sitemap.xml with {len(pages)} URLs")
 
 
 if __name__ == "__main__":

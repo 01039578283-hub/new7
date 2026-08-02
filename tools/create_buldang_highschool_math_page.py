@@ -1,15 +1,26 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import json
+import os
 import re
+from datetime import date
 from pathlib import Path
 from urllib.parse import quote
+
+from article_sections import (
+    article_plain_text,
+    article_section_itemlist,
+    article_section_nodes,
+    build_unique_article,
+    render_article_sections,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DOMAIN = "https://xn--zb0b93vh4ggmeqzwda.com"
-TODAY = "2026-07-15"
+TODAY = os.environ.get("SITE_MODIFIED", date.today().isoformat())
 
 TITLE = "불당동 고등 수학학원"
 SITE_NAME = "학습관리학원"
@@ -18,6 +29,7 @@ REGION = "충남"
 DISTRICT = "천안시 서북구"
 ADDRESS = "충남 천안시 서북구 불당33길 22 고은타워 805호"
 REGISTERED_NAME = "불당점와와학습코칭학원"
+ACTUAL_CENTER_NAME = "와와학습코칭센터 불당점"
 REGISTRATION = "천안교육지원청 등록 제4191호"
 
 REL_DIR = Path("전국학원") / "불당동" / "고등수학학원"
@@ -30,15 +42,36 @@ CENTER_IMAGE = "../../../assets/centers/common/local6839.webp"
 MAP_IMAGE = "../../../assets/maps/buldangdong.jpg"
 
 
+def unique_article_sections():
+    return build_unique_article(
+        page_key=CANONICAL,
+        title=TITLE,
+        area_phrase=f"{REGION} {DISTRICT} {DONG}",
+        town=DONG,
+        page_role="고등 수학학원",
+        subject_pair="고등 수학 내신과 모의고사",
+        primary="고등 수학 내신",
+        secondary="모의고사 수학",
+        primary_scope="학교 진도, 개념 이해, 서술 과정, 변형 문제와 계산 정확도",
+        secondary_scope="공통 문항 풀이, 시간 배분, 오답 원인 분류와 재풀이",
+        school_context="학생이 가져온 재학 학교의 실제 진도표·시험 범위",
+        center_reference=f"센터정보 자료에서 확인된 {ACTUAL_CENTER_NAME}",
+        scenario="내신 문제는 풀지만 모의고사에서 풀이 순서와 시간 배분이 흔들리는 경우",
+    )
+
+
 def schema_graph() -> dict:
     page_id = CANONICAL + "#webpage"
-    org_id = CANONICAL + "#organization"
+    identity = f"{ACTUAL_CENTER_NAME}|{ADDRESS}"
+    org_id = f"{DOMAIN}/#center-{hashlib.sha256(identity.encode('utf-8')).hexdigest()[:12]}"
     service_id = CANONICAL + "#service"
     article_id = CANONICAL + "#article"
     faq_id = CANONICAL + "#faq"
     breadcrumb_id = CANONICAL + "#breadcrumb"
     itemlist_id = CANONICAL + "#itemlist"
     image_id = CANONICAL + "#primaryimage"
+    article_sections = unique_article_sections()
+    article_refs = [{"@id": f"{CANONICAL}#{section.anchor}"} for section in article_sections]
 
     faq = [
         (
@@ -61,15 +94,6 @@ def schema_graph() -> dict:
             "불당동 고등 수학학원 선택 시 가장 중요한 기준은 무엇인가요?",
             "고등 수학은 진도보다 수업 후 관리가 중요합니다. 개념 설명, 유형 적용, 반복 오답, 시험 전 복습이 플래너와 피드백으로 이어지는지 확인하는 것이 좋습니다.",
         ),
-    ]
-
-    reviews = [
-        ("★★★★★", "불당동 고등 수학학원 상담을 받아보니 아이가 어디서 막히는지 더 선명하게 알 수 있었습니다. 단순히 문제를 더 풀리는 방향이 아니라 오답 원인을 정리해줘서 좋았습니다."),
-        ("★★★★★", "고등 수학은 진도만 따라가면 되는 줄 알았는데, 상담 후 개념 공백과 풀이 습관을 따로 봐야 한다는 걸 알게 됐습니다."),
-        ("★★★★★", "불당동에서 고등 수학 상담을 알아보다가 현재 교재와 시험지를 기준으로 설명해줘서 방향을 잡기 쉬웠습니다."),
-        ("★★★★★", "아이의 모의고사 오답과 내신 준비가 따로 놀고 있었는데, 어떤 순서로 복습해야 하는지 정리받았습니다."),
-        ("★★★★★", "수학 문제를 많이 풀어도 점수가 잘 오르지 않는 이유를 상담에서 짚어줘서 도움이 됐습니다."),
-        ("★★★★☆", "상담 전에 준비할 자료를 알려줘서 아이의 현재 상태를 차분히 정리해 볼 수 있었습니다."),
     ]
 
     graph = [
@@ -106,8 +130,9 @@ def schema_graph() -> dict:
                 {"@type": "WebPageElement", "name": "고1·고2·고3 관리 포인트"},
                 {"@type": "WebPageElement", "name": "센터 기준 정보"},
                 {"@type": "WebPageElement", "name": "FAQ"},
-                {"@type": "WebPageElement", "name": "학부모 후기"},
+                {"@type": "WebPageElement", "name": "상담 시 확인할 학습 변화"},
                 {"@type": "WebPageElement", "name": "내부링크"},
+                *article_refs,
             ],
         },
         {"@type": "ImageObject", "@id": image_id, "url": REP_IMAGE, "caption": f"{TITLE} {SITE_NAME} 대표"},
@@ -117,22 +142,22 @@ def schema_graph() -> dict:
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "홈", "item": f"{DOMAIN}/"},
                 {"@type": "ListItem", "position": 2, "name": "전국학원", "item": f"{DOMAIN}/%EC%A0%84%EA%B5%AD%ED%95%99%EC%9B%90/"},
-                {"@type": "ListItem", "position": 3, "name": "불당동"},
+                {"@type": "ListItem", "position": 3, "name": "불당동", "item": f"{DOMAIN}/%EC%A0%84%EA%B5%AD%ED%95%99%EC%9B%90/%EB%B6%88%EB%8B%B9%EB%8F%99/"},
                 {"@type": "ListItem", "position": 4, "name": "고등수학학원", "item": CANONICAL},
             ],
         },
         {
             "@type": ["EducationalOrganization", "LocalBusiness"],
             "@id": org_id,
-            "name": TITLE,
-            "alternateName": [SITE_NAME, REGISTERED_NAME, "불당동 고등 수학 학습관리"],
-            "url": CANONICAL,
-            "image": REP_IMAGE,
+            "name": ACTUAL_CENTER_NAME,
+            "alternateName": [SITE_NAME, ACTUAL_CENTER_NAME],
+            "url": "https://wawa-center.kr/",
+            "sameAs": ["https://wawa-center.kr/"],
+            "telephone": "010-6839-8283",
+            "openingHours": "Mo-Sa 12:00-24:00",
             "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "불당33길 22 고은타워 805호",
-                "addressLocality": "천안시 서북구",
-                "addressRegion": "충남",
+                "streetAddress": ADDRESS,
                 "addressCountry": "KR",
             },
             "areaServed": {"@type": "Place", "name": "불당동"},
@@ -142,20 +167,22 @@ def schema_graph() -> dict:
                     "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
                     "opens": "12:00",
                     "closes": "24:00",
+                    "description": "12시-24시",
                 }
             ],
-            "knowsAbout": ["고등 수학", "고등 수학 내신", "모의고사 오답", "플래너 관리", "오답 재학습"],
-            "identifier": REGISTRATION,
-            "makesOffer": {
-                "@type": "Offer",
-                "name": "불당동 고등 수학 학습관리 상담",
-                "category": "고등 수학학원",
-                "itemOffered": {"@id": service_id},
-                "availability": "https://schema.org/InStock",
+            "knowsAbout": ["초등 학습관리", "중등 내신 관리", "고등 학습관리", "영어 수학 국어 코칭", "전문학원 상담", "플래너 관리", "오답 재학습"],
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+82-10-6839-8283",
+                "contactType": "학습 상담",
+                "availableLanguage": "Korean",
             },
-            "review": [
-                {"@type": "Review", "reviewRating": {"@type": "Rating", "ratingValue": "5", "bestRating": "5"}, "reviewBody": body}
-                for stars, body in reviews
+            "identifier": REGISTRATION,
+            "makesOffer": [
+                {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "불당동 초등반 학습관리", "serviceType": "TutoringService"}},
+                {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "불당동 중등반 내신관리", "serviceType": "TutoringService"}},
+                {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "불당동 고등반 학습관리", "serviceType": "TutoringService"}},
+                {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "불당동 영어·수학·국어 학습코칭", "serviceType": "TutoringService"}},
             ],
         },
         {
@@ -180,11 +207,14 @@ def schema_graph() -> dict:
             "author": {"@id": org_id},
             "publisher": {"@id": org_id},
             "mainEntityOfPage": {"@id": page_id},
-            "articleSection": ["불당동", "고등 수학학원", "내신 관리", "모의고사 오답", "상담 체크리스트"],
+            "articleSection": ["불당동", "고등 수학학원", "내신 관리", "모의고사 오답", "상담 체크리스트", *[section.heading for section in article_sections]],
             "about": [{"@type": "Thing", "name": "불당동 고등 수학학원"}, {"@type": "Thing", "name": "고등 수학 내신"}],
             "mentions": [{"@type": "Thing", "name": "최근 내신 시험지"}, {"@type": "Thing", "name": "모의고사 오답"}, {"@type": "Thing", "name": "현재 교재"}],
-            "hasPart": [{"@type": "WebPageElement", "name": "검색 의도 답변"}, {"@type": "WebPageElement", "name": "FAQ"}, {"@type": "WebPageElement", "name": "후기"}],
+            "hasPart": article_refs,
+            "articleBody": article_plain_text(article_sections),
         },
+        *article_section_nodes(CANONICAL, article_sections, article_id),
+        article_section_itemlist(CANONICAL, TITLE, article_sections),
         {
             "@type": "FAQPage",
             "@id": faq_id,
@@ -202,7 +232,7 @@ def schema_graph() -> dict:
                 {"@type": "ListItem", "position": 2, "name": "고등 수학 관리 포인트", "url": CANONICAL + "#grade"},
                 {"@type": "ListItem", "position": 3, "name": "상담 전 체크리스트", "url": CANONICAL + "#checklist"},
                 {"@type": "ListItem", "position": 4, "name": "FAQ", "url": CANONICAL + "#faq"},
-                {"@type": "ListItem", "position": 5, "name": "학부모 후기", "url": CANONICAL + "#review"},
+                {"@type": "ListItem", "position": 5, "name": "상담 시 확인할 학습 변화", "url": CANONICAL + "#review"},
             ],
         },
     ]
@@ -210,6 +240,7 @@ def schema_graph() -> dict:
 
 
 def render_page() -> str:
+    article_html = render_article_sections(unique_article_sections())
     schema = json.dumps(schema_graph(), ensure_ascii=False, separators=(",", ":"))
     desc = "불당동 고등 수학학원 상담 전 확인할 고등 수학 내신, 모의고사 오답, 개념 공백, 플래너 관리 기준을 한 페이지에 정리했습니다."
     return f"""<!doctype html>
@@ -257,7 +288,7 @@ def render_page() -> str:
         <div class="container local-hero-grid">
           <div class="local-hero-card">
             <nav class="breadcrumb" aria-label="breadcrumb">
-              <a href="../../../index.html">홈</a><span>›</span><a href="../../index.html">전국학원</a><span>›</span><span>불당동</span><span>›</span><span>고등수학학원</span>
+              <a href="../../../index.html">홈</a><span>›</span><a href="../../index.html">전국학원</a><span>›</span><a href="../index.html">불당동</a><span>›</span><span>고등수학학원</span>
             </nav>
             <span class="eyebrow">☁️ 충남 천안시 서북구 불당동 고등 수학 학습관리</span>
             <h1 class="page-title">{TITLE}</h1>
@@ -327,6 +358,8 @@ def render_page() -> str:
           </div>
         </div>
       </section>
+
+{article_html}
 
       <section class="section" id="grade">
         <div class="container">
@@ -451,19 +484,19 @@ def render_page() -> str:
           <div class="panel soft-panel">
             <details>
               <summary>불당동 고등 수학학원 상담은 무엇부터 확인하나요?</summary>
-              <p>먼저 고등학생의 현재 단원, 학교 진도, 최근 시험지와 반복 오답을 확인합니다. 수업 횟수보다 개념 공백과 문제 적용 단계가 어디에서 막히는지를 먼저 봅니다.</p>
+              <p>먼저 고등학생의 현재 단원, 학교 진도, 최근 시험지와 반복 오답을 확인합니다. 불당동 고등 수학학원 상담에서는 수업 횟수보다 개념 공백과 문제 적용 단계가 어디에서 막히는지를 먼저 봅니다.</p>
             </details>
             <details>
-              <summary>고1 학생도 고등 수학 상담이 필요한가요?</summary>
+              <summary>고1 학생도 불당동 고등 수학학원 상담이 필요한가요?</summary>
               <p>고1은 중학교식 풀이 습관에서 고등 내신형 문제 풀이로 넘어가는 시기입니다. 개념을 안다고 느껴도 서술 과정, 변형 문제, 시험 시간 배분에서 흔들릴 수 있어 초기에 학습 흐름을 점검하는 것이 좋습니다.</p>
             </details>
             <details>
-              <summary>모의고사 오답도 함께 봐야 하나요?</summary>
-              <p>모의고사 오답을 가져오면 단순 실수인지, 개념 누락인지, 풀이 전략 문제인지 구분하는 데 도움이 됩니다. 내신과 모의고사의 약점을 따로 보되, 반복되는 단원은 같은 플래너 안에서 관리합니다.</p>
+              <summary>불당동 고등 수학학원에서 모의고사 오답도 함께 보나요?</summary>
+              <p>상담 시 모의고사 오답을 가져오면 단순 실수인지, 개념 누락인지, 풀이 전략 문제인지 구분하는 데 도움이 됩니다. 내신과 모의고사의 약점을 따로 보되, 반복되는 단원은 같은 플래너 안에서 관리합니다.</p>
             </details>
             <details>
               <summary>상담 전에 어떤 자료를 준비하면 좋나요?</summary>
-              <p>최근 내신 시험지, 모의고사 오답, 현재 사용하는 교재, 학교 진도, 자주 틀리는 단원을 준비하면 좋습니다. 자료가 구체적일수록 필요한 보완 순서를 더 정확히 정리할 수 있습니다.</p>
+              <p>최근 내신 시험지, 모의고사 오답, 현재 사용하는 교재, 학교 진도, 자주 틀리는 단원을 준비하면 좋습니다. 자료가 구체적일수록 불당동 학생에게 필요한 보완 순서를 더 정확히 정리할 수 있습니다.</p>
             </details>
             <details>
               <summary>불당동 고등 수학학원 선택 시 가장 중요한 기준은 무엇인가요?</summary>
@@ -477,17 +510,14 @@ def render_page() -> str:
         <div class="container">
           <div class="section-head">
             <div>
-              <p class="section-kicker">Parent Review</p>
-              <h2>불당동 고등 수학 상담 후기</h2>
+              <p class="section-kicker">상담 참고</p>
+              <h2>불당동 고등 수학 상담 시 확인할 학습 변화</h2>
             </div>
           </div>
           <div class="review-grid">
-            <article class="review-card"><div class="stars">★★★★★</div><p>불당동 고등 수학학원 상담을 받아보니 아이가 어디서 막히는지 더 선명하게 알 수 있었습니다. 단순히 문제를 더 풀리는 방향이 아니라 오답 원인을 정리해줘서 좋았습니다.</p></article>
-            <article class="review-card"><div class="stars">★★★★★</div><p>고등 수학은 진도만 따라가면 되는 줄 알았는데, 상담 후 개념 공백과 풀이 습관을 따로 봐야 한다는 걸 알게 됐습니다.</p></article>
-            <article class="review-card"><div class="stars">★★★★★</div><p>불당동에서 고등 수학 상담을 알아보다가 현재 교재와 시험지를 기준으로 설명해줘서 방향을 잡기 쉬웠습니다.</p></article>
-            <article class="review-card"><div class="stars">★★★★★</div><p>아이의 모의고사 오답과 내신 준비가 따로 놀고 있었는데, 어떤 순서로 복습해야 하는지 정리받았습니다.</p></article>
-            <article class="review-card"><div class="stars">★★★★★</div><p>수학 문제를 많이 풀어도 점수가 잘 오르지 않는 이유를 상담에서 짚어줘서 도움이 됐습니다.</p></article>
-            <article class="review-card"><div class="stars">★★★★☆</div><p>상담 전에 준비할 자료를 알려줘서 아이의 현재 상태를 차분히 정리해 볼 수 있었습니다.</p></article>
+            <article class="review-card"><strong>개념과 적용 단계 분리</strong><p>설명은 이해하지만 변형 문제에서 막힌다면 개념 부족과 적용 순서 문제를 나누어 확인해야 합니다.</p></article>
+            <article class="review-card"><strong>내신과 모의고사 오답 구분</strong><p>같은 단원이 반복해서 틀리는지 확인하되, 내신 범위와 모의고사의 약점은 서로 다른 복습 일정으로 정리합니다.</p></article>
+            <article class="review-card"><strong>재풀이 기록 확인</strong><p>오답노트를 작성했는지보다 일정 시간이 지난 뒤 답을 보지 않고 다시 풀 수 있는지를 확인하는 것이 중요합니다.</p></article>
           </div>
         </div>
       </section>
@@ -501,6 +531,7 @@ def render_page() -> str:
             </div>
           </div>
           <div class="local-link-grid child-link-grid">
+            <a href="../index.html"><span>상위 안내</span><strong>불당동 전문학원</strong><small>동네 기본 안내</small></a>
             <a href="../../index.html"><span>지역 목록</span><strong>전국학원</strong><small>전체 동네 보기</small></a>
             <a href="../../../학습가이드/index.html"><span>학습 흐름</span><strong>학습가이드</strong><small>공부관리 기준 보기</small></a>
             <a href="../../../상담문의/index.html"><span>상담 준비</span><strong>상담문의</strong><small>현재 상태 정리하기</small></a>
@@ -564,7 +595,7 @@ def update_hub_link() -> bool:
             <p class="section-desc">검색 의도를 더 날카롭게 반영한 예시 페이지입니다. 고등 수학 상담 기준을 먼저 확인해 보세요.</p>
           </div>
           <div class="local-link-grid child-link-grid">
-            <a href="불당동/고등수학학원/index.html"><span>천안시 불당동</span><strong>불당동 고등 수학학원</strong><small>고등 수학 상담 기준 보기</small></a>
+            <a href="불당동/고등수학학원/"><span>천안시 불당동</span><strong>불당동 고등 수학학원</strong><small>고등 수학 상담 기준 보기</small></a>
           </div>
         </div>
       </section>
@@ -577,29 +608,31 @@ def update_hub_link() -> bool:
     return True
 
 
-def update_sitemap() -> bool:
-    path = ROOT / "sitemap.xml"
+def update_parent_link() -> bool:
+    path = ROOT / "전국학원" / "불당동" / "index.html"
     source = path.read_text(encoding="utf-8")
-    if CANONICAL in source:
+    if 'href="고등수학학원/"' in source:
         return False
-    block = f"""  <url>
-    <loc>{CANONICAL}</loc>
-    <lastmod>{TODAY}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-"""
-    updated = source.replace("</urlset>", block + "</urlset>")
+    marker = '              <a href="소수정예학원/"><span>소수정예 관리</span><strong>불당동 소수정예학원</strong><small>바로가기</small></a>'
+    addition = '\n              <a href="고등수학학원/"><span>고등 수학</span><strong>불당동 고등 수학학원</strong><small>내신·모의고사 안내</small></a>'
+    if marker not in source:
+        raise RuntimeError("Buldang parent child-link marker not found")
+    updated = source.replace(marker, marker + addition)
     path.write_text(updated, encoding="utf-8", newline="\n")
     return True
 
 
 def main() -> None:
     TARGET.parent.mkdir(parents=True, exist_ok=True)
-    TARGET.write_text(render_page(), encoding="utf-8", newline="\n")
+    page = re.sub(
+        r'href="([^"?#]*?)index\.html([?#][^"]*)?"',
+        lambda match: f'href="{match.group(1) or "./"}{match.group(2) or ""}"',
+        render_page(),
+    )
+    TARGET.write_text(page, encoding="utf-8", newline="\n")
     hub = update_hub_link()
-    sitemap = update_sitemap()
-    print(json.dumps({"page": str(TARGET.relative_to(ROOT)), "hub_link": hub, "sitemap": sitemap, "url": CANONICAL}, ensure_ascii=False, indent=2))
+    parent = update_parent_link()
+    print(json.dumps({"page": str(TARGET.relative_to(ROOT)), "hub_link": hub, "parent_link": parent, "url": CANONICAL}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
