@@ -10,6 +10,8 @@ TOOLS = ROOT / "tools"
 BUILD_STEPS = (
     "generate_national_pages.py",
     "create_buldang_highschool_math_page.py",
+    "generate_subject_pages.py",
+    "update_subject_navigation.py",
     "finalize_site.py",
     "generate_sitemap.py",
     "generate_rss.py",

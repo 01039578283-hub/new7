@@ -1196,6 +1196,7 @@ def nav(prefix: str, active: str) -> str:
         ("학습가이드", f"{prefix}학습가이드/index.html", "guide"),
         ("상담문의", f"{prefix}상담문의/index.html", "contact"),
         ("전국학원", f"{prefix}전국학원/index.html", "national"),
+        ("과목별학원", f"{prefix}과목별학원/index.html", "subjects"),
     ]
     links = []
     for label, href, key in items:
