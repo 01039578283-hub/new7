@@ -6,6 +6,7 @@ import html
 import json
 import re
 import shutil
+import argparse
 from collections import OrderedDict
 from datetime import date
 from pathlib import Path
@@ -50,7 +51,56 @@ CATEGORIES = [
         "english": "HIGH SCHOOL ENGLISH",
         "summary": "학교 지문과 어휘·문법·독해·서술형의 연결을 확인하는 지역별 고등 영어 안내입니다.",
     },
+    {
+        "label": "중학생 수학학원",
+        "slug": "중학생수학학원",
+        "zip": "중학생 수학학원.zip",
+        "level": "중학생",
+        "subject": "수학",
+        "school_field": "타깃학교\n(중)",
+        "grade_field": "가능학년\n(수학)",
+        "english": "MIDDLE SCHOOL MATH",
+        "summary": "중학교 진도와 내신 범위, 개념·조건 해석·오답 재현 과정을 함께 확인하는 지역별 중등 수학 안내입니다.",
+    },
+    {
+        "label": "중학생 영어학원",
+        "slug": "중학생영어학원",
+        "zip": "중학생 영어학원.zip",
+        "level": "중학생",
+        "subject": "영어",
+        "school_field": "타깃학교\n(중)",
+        "grade_field": "가능학년\n(영어)",
+        "english": "MIDDLE SCHOOL ENGLISH",
+        "summary": "중학교 교과 진도와 단어·문법·독해·서술형 연결을 살피는 지역별 중등 영어 안내입니다.",
+    },
 ]
+
+# These terms describe an academy's administration, facilities, or delivery
+# channel rather than a student's English/Math learning need.  Some supplied
+# manuscripts use one as a rotating auxiliary keyword.  Never carry the raw
+# claim into a public page; replace it with the page's verified learning focus.
+UNVERIFIED_ACADEMY_TERM_RE = re.compile(
+    r"학원\s*(?:온라인\s*수업|대면\s*수업|화상\s*수업|실시간\s*수업|자습실|스터디룸|"
+    r"상담실|강의실|휴게실|사물함|교재실|자료실|예약\s*관리|전자\s*계약|관리\s*솔루션|"
+    r"문자\s*발송|미납\s*관리|출결\s*앱|데스크|데이터\s*관리|코디네이터|창업|"
+    r"개인정보\s*관리|안전\s*관리|방역\s*관리|청결\s*관리|출입\s*관리|보안\s*관리|"
+    r"수강생\s*관리|회원\s*관리|고객\s*관리|결제\s*관리|결제\s*시스템|매출\s*관리|"
+    r"수납\s*관리|문서\s*관리|관리\s*앱|관리\s*프로그램)"
+    r"(?:\s*(?:시스템|프로그램|앱))?"
+)
+
+
+def related_categories_for(config: dict[str, str]) -> list[dict[str, str]]:
+    """Order nearby guides by user intent, not by generator declaration order."""
+    order = {item["slug"]: index for index, item in enumerate(CATEGORIES)}
+    candidates = [item for item in CATEGORIES if item["slug"] != config["slug"]]
+    return sorted(
+        candidates,
+        key=lambda item: (
+            0 if item["level"] == config["level"] else 1 if item["subject"] == config["subject"] else 2,
+            order[item["slug"]],
+        ),
+    )
 
 
 def esc(value: object) -> str:
@@ -100,6 +150,23 @@ def absolute_url(*parts: str) -> str:
 def load_csv(name: str) -> list[dict[str, str]]:
     with (COMMON_DIR / name).open(encoding="utf-8-sig", newline="") as stream:
         return list(csv.DictReader(stream))
+
+
+def load_verified_school_names() -> tuple[str, ...]:
+    """Return every school name that appears in the supplied center data.
+
+    The list is used only to detect a school from a different school level in
+    a manuscript sentence.  The category-specific school column remains the
+    sole source of names that may be rendered on a page.
+    """
+    values: set[str] = set()
+    for row in load_csv("센터정보 정리.csv"):
+        for field in ("타깃학교\n(초)", "타깃학교\n(중)", "타깃학교\n(고)"):
+            values.update(normalize(item) for item in row.get(field, "").split(",") if normalize(item))
+    return tuple(sorted(values, key=lambda item: (-len(item), item)))
+
+
+VERIFIED_SCHOOL_NAMES = load_verified_school_names()
 
 
 def parse_sections(text: str) -> dict[str, str]:
@@ -160,6 +227,74 @@ def stable_choice(seed: str, values: list[str]) -> str:
     return values[int.from_bytes(digest[:4], "big") % len(values)]
 
 
+def extract_reference_terms(value: str) -> tuple[str, ...]:
+    """Find spreadsheet-style reference terms that should not be copied raw.
+
+    The supplied manuscripts intentionally rotate one auxiliary keyword per
+    locality.  Some are useful learning concepts, while others describe
+    facilities or academy administration.  We retain the page variety but
+    replace every such term with a student-facing, subject-specific learning
+    focus instead of exposing an unverified operation or feature.
+    """
+    patterns = (
+        r"참고\s*키워드(?:는|은|이|가|을|를|과|와)?\s+"
+        r"(?:항목\s*)?[\(\[‘“\"']?\s*([가-힣A-Za-z0-9·_-]+?)"
+        r"(?:은|는|이|가|을|를|과|와|으로|로)?(?=\s*(?:함께|같은|처럼|관점|관련|포인트|내용|항목|[,.)]|$))",
+        r"(?:오답 관리와|학습 관리와|내신 준비와|가정 확인법과|시험 준비와)\s*"
+        r"([가-힣A-Za-z0-9·_-]+)\s*(?:내용|확인 질문|연결점|포인트|관련 기준)",
+    )
+    found: list[str] = []
+    for pattern in patterns:
+        for term in re.findall(pattern, value):
+            clean = normalize(term)
+            if clean and clean not in {"자체", "그"} and clean not in found:
+                found.append(clean)
+    return tuple(sorted(found, key=lambda item: (-len(item), item)))
+
+
+def learning_focus_phrase(seed: str, subject: str) -> str:
+    if subject == "수학":
+        objects = [
+            "개념 빈칸", "문제 조건", "풀이 근거", "계산 과정", "서술형 풀이",
+            "오답 원인", "시험 범위", "단원 연결", "과제 실행", "복습 시점",
+            "풀이 시간", "주간 학습",
+        ]
+    else:
+        objects = [
+            "어휘 누적", "문법 적용", "독해 근거", "문장 구조", "서술형 문장",
+            "교과서 지문", "오답 문장", "시험 범위", "과제 실행", "복습 시점",
+            "읽기 속도", "주간 영어",
+        ]
+    actions = ["점검", "기록", "재확인", "보완", "복습", "분석"]
+    return (
+        stable_choice(f"{seed}|focus-object", objects)
+        + " "
+        + stable_choice(f"{seed}|focus-action", actions)
+    )
+
+
+def replace_reference_term(value: str, term: str, replacement: str) -> str:
+    """Replace a rotated source term and repair particles around it."""
+    text = value
+    prefix = rf"(?<![가-힣A-Za-z0-9]){re.escape(term)}"
+    for pair, suffix in {
+        "은/는": r"(?:은|는)",
+        "이/가": r"(?:이|가)",
+        "을/를": r"(?:을|를)",
+        "과/와": r"(?:과|와)",
+        "으로/로": r"(?:으로|로)",
+    }.items():
+        text = re.sub(
+            prefix + suffix,
+            lambda _match, word=replacement, particle_pair=pair: korean_josa(word, particle_pair),
+            text,
+        )
+    text = re.sub(prefix + r"(?:이)?라는", replacement + "이라는", text)
+    for suffix in ("처럼", "같은", "까지", "부터", "보다", "관련", "관점", "포인트", "내용", "도", "만", "에", "의", "에서"):
+        text = re.sub(prefix + re.escape(suffix), replacement + suffix, text)
+    return re.sub(prefix + r"(?![가-힣A-Za-z0-9])", replacement, text)
+
+
 def load_representative_images() -> list[str]:
     """Load the verified representative-image URLs used by the existing site."""
     values: list[str] = []
@@ -209,9 +344,11 @@ def korean_josa(value: str, pair: str) -> str:
 
 def content_context(
     *, title: str, locality: str, slug: str, row: dict[str, str], config: dict[str, str],
+    source_text: str,
 ) -> dict[str, object]:
+    seed = f"{config['slug']}|{slug}|{locality}"
     return {
-        "seed": f"{config['slug']}|{slug}|{locality}",
+        "seed": seed,
         "title": title,
         "locality": locality,
         "region": normalize(f"{row.get('지역', '')} {row.get('시or구', '')}"),
@@ -222,12 +359,31 @@ def content_context(
         "level": config["level"],
         "subject": config["subject"],
         "category": config["slug"],
+        "reference_terms": extract_reference_terms(source_text),
+        "learning_focus": learning_focus_phrase(seed, config["subject"]),
     }
 
 
 def repair_named_josa(value: str, context: dict[str, object]) -> str:
     """Correct particles attached to generated locality/center strings."""
     text = value
+    address = str(context["address"])
+    address_token = "__VERIFIED_CENTER_ADDRESS__"
+    locality = str(context["locality"])
+    protected_road_tokens: dict[str, str] = {}
+    # A locality can also be the first part of a legal road name (덕풍동로,
+    # 석동로, 율하동로, 좌동로). Protect the verified address before fixing
+    # particles so those road names remain byte-for-byte intact.
+    if address and address in text:
+        text = text.replace(address, address_token)
+    if address and locality:
+        for index, token in enumerate(normalize(address).split()):
+            clean_token = token.strip(",.;:()[]")
+            if clean_token.startswith(locality) and clean_token != locality:
+                placeholder = f"__VERIFIED_LOCAL_ROAD_{index}__"
+                if clean_token in text:
+                    text = text.replace(clean_token, placeholder)
+                    protected_road_tokens[placeholder] = clean_token
     for noun in (str(context["locality"]), str(context["center"])):
         if not noun:
             continue
@@ -244,7 +400,10 @@ def repair_named_josa(value: str, context: dict[str, object]) -> str:
                 lambda _match, word=noun, particle_pair=pair: korean_josa(word, particle_pair),
                 text,
             )
-    address = str(context["address"])
+    if address:
+        text = text.replace(address_token, address)
+    for placeholder, road_token in protected_road_tokens.items():
+        text = text.replace(placeholder, road_token)
     if address:
         # A raw address often ends in 호/층/점. Appending 로 mechanically makes
         # malformed strings, so express the relation with "기준으로" instead.
@@ -253,6 +412,18 @@ def repair_named_josa(value: str, context: dict[str, object]) -> str:
             address + " 기준으로",
             text,
         )
+        for pair, forms in {
+            "은/는": ("은", "는"),
+            "이/가": ("이", "가"),
+            "을/를": ("을", "를"),
+            "과/와": ("과", "와"),
+        }.items():
+            suffix = "(?:" + "|".join(forms) + ")"
+            text = re.sub(
+                re.escape(address) + suffix + r"(?=\s|[,.;:!?]|$)",
+                lambda _match, word=address, particle_pair=pair: korean_josa(word, particle_pair),
+                text,
+            )
     return text.replace("주소+로", "주소를 기준으로").replace("주소 + 로", "주소를 기준으로")
 
 
@@ -263,9 +434,12 @@ def enforce_verified_school_claims(
     if seed_suffix.startswith("heading") or seed_suffix == "meta-description":
         return value
     markers = ("수업학교", "수업 학교", "학교 정보", "학교명", "학교 기준", "학교군", "학교 범위")
-    if not any(marker in value for marker in markers):
-        return value
     schools = [str(item) for item in context["schools"]]
+    mentioned_in_value = [name for name in VERIFIED_SCHOOL_NAMES if name in value]
+    if not any(marker in value for marker in markers) and not any(
+        name not in schools for name in mentioned_in_value
+    ):
+        return value
     level = str(context["level"])
     subject = str(context["subject"])
     locality = str(context["locality"])
@@ -306,7 +480,9 @@ def enforce_verified_school_claims(
     normalized = []
     for index, sentence in enumerate(sentences):
         has_marker = any(marker in sentence for marker in markers)
-        is_claim = has_marker
+        mentioned_schools = [name for name in VERIFIED_SCHOOL_NAMES if name in sentence]
+        has_unverified_level_school = any(name not in schools for name in mentioned_schools)
+        is_claim = has_marker or has_unverified_level_school
         normalized.append(verified_sentence(sentence, index) if is_claim else sentence)
     return " ".join(normalized)
 
@@ -317,6 +493,84 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
     if not text:
         return text
     seed = f"{context['seed']}|{seed_suffix}"
+    focus = str(context["learning_focus"])
+    # Replace every spacing variant of an unverified operational/facility term
+    # before the narrower reference-keyword parser runs.  Particle repair is
+    # handled by the same helper used for ordinary rotated reference terms.
+    unsafe_terms = sorted(
+        {match.group(0) for match in UNVERIFIED_ACADEMY_TERM_RE.finditer(text)},
+        key=len,
+        reverse=True,
+    )
+    for unsafe_term in unsafe_terms:
+        text = text.replace(unsafe_term, focus)
+    if unsafe_terms:
+        text = replace_reference_term(text, focus, focus)
+    for reference_term in context.get("reference_terms", ()):
+        text = replace_reference_term(text, str(reference_term), focus)
+    text = re.sub(
+        re.escape(focus) + r"\s+같은\s+참고\s*키워드는\s+학부모에게\s+어떤\s+의미가\s+있나요\?",
+        f"{korean_josa(focus, '은/는')} 학습 상담에서 어떻게 확인하나요?",
+        text,
+    )
+    text = re.sub(
+        re.escape(focus) + r"(?:이라는|라는)\s+참고\s*키워드는\s+운영\s+편의와\s+학습\s+환경의\s+한\s+단서가\s+될\s+수\s+있지만,?",
+        f"{korean_josa(focus, '은/는')} 학생의 현재 상태를 확인하는 기준이며,",
+        text,
+    )
+    text = re.sub(
+        re.escape(focus) + r"처럼\s+운영을\s+떠올리게\s+하는\s+키워드도\s+결국",
+        f"{korean_josa(focus, '은/는')} 결국",
+        text,
+    )
+    text = re.sub(r"참고\s*키워드(?:는|은|이|가|을|를|과|와)?\s+", "", text)
+
+    if str(context["subject"]) == "영어":
+        focus_explanations = [
+            f"{korean_josa(focus, '은/는')} 어휘·문법·독해 가운데 막히는 지점을 확인하고 다음 과제 순서를 정하는 기준입니다.",
+            f"{korean_josa(focus, '은/는')} 교과서 문장을 이해하고 다시 써 보는 과정에서 어느 단계가 부족한지 살피는 기준입니다.",
+            f"{korean_josa(focus, '은/는')} 단어 암기부터 지문 해석까지 학생의 영어 학습 흐름을 구체화하는 확인 항목입니다.",
+        ]
+    else:
+        focus_explanations = [
+            f"{korean_josa(focus, '은/는')} 개념 이해와 조건 해석, 풀이 재현 중 어디에서 막히는지 확인하는 기준입니다.",
+            f"{korean_josa(focus, '은/는')} 오답 원인을 나누고 다음 복습 순서를 정할 때 확인하는 수학 학습 기준입니다.",
+            f"{korean_josa(focus, '은/는')} 계산 결과보다 풀이 과정에서 빠진 근거를 찾고 보완 계획을 세우는 기준입니다.",
+        ]
+    text = re.sub(
+        re.escape(focus)
+        + r"(?:은|는)\s+학원\s+운영이나\s+학습\s+관리에서\s+살펴볼\s+수\s+있는\s+보조\s+단서입니다\.?",
+        stable_choice(f"{seed}|focus-explanation", focus_explanations),
+        text,
+    )
+
+    summary_replacements = [
+        f"{context['region']} {context['locality']}에서 {context['level']} {context['subject']}학원을 비교할 때는 {focus}, 학교 진도, 과제·오답 피드백이 실제 수업 계획에 반영되는지 확인해야 합니다.",
+        f"{context['locality']} {context['level']} {context['subject']} 상담에서는 {focus}과 현재 시험 범위를 함께 확인해야 학생에게 필요한 학습 순서를 구체화할 수 있습니다.",
+        f"이 안내는 {context['locality']} 학생의 {focus}, 학교별 진도, 과제 수행 기록을 함께 살펴 수업 선택 기준을 분명히 하도록 구성했습니다.",
+    ]
+    text = re.sub(
+        r"검색\s+결과\s+설명에는[^.!?]*정리할\s+수\s+있습니다\.?",
+        stable_choice(f"{seed}|search-summary", summary_replacements),
+        text,
+    )
+    text = re.sub(
+        r"[^.!?]*(?:원고|페이지|안내)(?:는|에서는)\s+검색\s+결과에서\s+바로\s+답을\s+찾도록\s+구성했습니다\.?",
+        stable_choice(
+            f"{seed}|direct-answer",
+            [
+                f"{context['locality']} 상담에서는 {focus}과 최근 시험지의 오답을 함께 확인해 필요한 복습 순서를 정합니다.",
+                f"{context['locality']} 학생에게 맞는 수업은 {focus}, 학교 진도, 과제 수행 기록을 함께 볼 때 구체적으로 판단할 수 있습니다.",
+                f"상담 전에는 {context['locality']} 학생이 어느 단원에서 막히는지와 오답을 다시 풀 수 있는지를 먼저 확인하면 됩니다.",
+            ],
+        ),
+        text,
+    )
+    text = re.sub(
+        r"이\s+(?:안내|원고|페이지)는\s+([^.!?]+?)을\s+기준으로\s+작성했습니다\.",
+        r"상담에서는 \1인지 먼저 확인합니다.",
+        text,
+    )
 
     def keyword_variant(term: str, offset: str) -> str:
         term = normalize(term)
@@ -384,6 +638,10 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
     )
     for old, new in replacements:
         text = text.replace(old, new)
+    text = text.replace(
+        f"{context['title']} 페이지용 메타 설명입니다",
+        f"{context['title']} 선택 기준을 안내합니다",
+    )
     text = text.replace("원고", "안내").replace("키워드", "확인 항목")
     text = re.sub(r"‘([^’]+)’\s*(?:확인 기준|관리 방식|운영 항목)\s*(?:체크|점검)\s*기준", r"‘\1’ 점검 기준", text)
     text = re.sub(r"(관련 정보|확인 기준|운영 방식)\s+항목", r"\1", text)
@@ -394,6 +652,8 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
     text = text.replace("구조화 데이터", "핵심 안내")
     text = text.replace("설명문으로 요약하기 좋습니다", "상담 전에 핵심을 확인할 수 있도록 정리했습니다")
     text = text.replace("학원주소", "학원 주소").replace("수업학교", "수업 학교")
+    text = text.replace("등록 주소", "센터 주소")
+    text = text.replace("등 제공 학교 진도", "등 확인된 학교 자료")
     text = text.replace("안내하는 안내입니다", "설명하는 자료입니다")
     text = text.replace("참고할 수 있는 정보형 안내입니다", "확인할 수 있도록 정리했습니다")
     text = text.replace("페이지는", "안내에서는").replace("페이지의", "안내의").replace("페이지를", "안내를")
@@ -413,6 +673,21 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
         text,
     )
     text = text.replace("학원하원", "등·하원")
+    text = text.replace("학원온라인수업라는", "학원온라인수업이라는")
+    text = text.replace("학원온라인수업이란는", "학원온라인수업이라는")
+    text = re.sub(
+        r"(?:확인 항목|관련 정보|확인 기준|운영 방식)\s*자체보다\s*"
+        r"(?:그\s*)?(?:확인 항목|관련 정보|확인 기준|운영 방식)(?:이|가)?\s*"
+        r"학생의 수업 경험으로 어떻게 바뀌는지 확인해야 합니다\.?",
+        "표현보다 진단 결과가 실제 학습 계획과 피드백으로 이어지는지 확인해야 합니다.",
+        text,
+    )
+    text = re.sub(
+        r"자체보다\s*(?:관련 정보|확인 기준|운영 방식)\s*(?:그\s*)?확인 항목(?:이|가)?\s*"
+        r"학생의 수업 경험으로 어떻게 바뀌는지 확인해야 합니다\.?",
+        "표현보다 진단 결과가 실제 학습 계획과 피드백으로 이어지는지 확인해야 합니다.",
+        text,
+    )
     text = text.replace("실제 페이지에 사용할 때", "실제 상담 기준으로 살필 때")
     text = text.replace("학습 기준 학습 방식", "학습 방식")
     text = re.sub(r"상담\s+상담", "상담", text)
@@ -432,6 +707,15 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
     text = text.replace("라는 질문을 걱정하는 가정이라면", "라는 질문에 대한 답이 필요한 가정이라면")
     text = re.sub(r"(관리 방식|확인 기준)(?=중심|관련|기록|기반|관점)", r"\1 ", text)
     text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+    text = re.sub(
+        r"핵심 안내에는 (.+?)을 연결해 정보성 페이지로 표시하기 좋습니다\.?",
+        r"이 안내에는 \1을 함께 정리했습니다.",
+        text,
+    )
+    text = text.replace(
+        "정보성 페이지로 표시하기 좋습니다",
+        "상담 전에 핵심을 확인할 수 있도록 정리했습니다",
+    )
     text = enforce_verified_school_claims(text, context, seed_suffix)
     return normalize(repair_named_josa(text, context))
 
@@ -552,6 +836,23 @@ def final_polish_text(value: str) -> str:
     text = text.replace("학습 또는 상담 포인트", "학습 상담 포인트")
     text = text.replace("확인할 내용을 확인할 수 있도록", "핵심을 확인할 수 있도록")
     text = text.replace("제공 주소", "센터 주소")
+    text = text.replace("확인 항목가", "확인 항목이")
+    text = text.replace("확인 기준 그 확인 항목이", "확인 기준이")
+    text = text.replace("관련 정보 그 확인 항목이", "관련 정보가")
+    text = re.sub(r"((?:체계적|집중)?학습관리)\s*은", r"\1는", text)
+    text = re.sub(r"((?:체계적|집중)?학습관리)\s*을", r"\1를", text)
+    text = text.replace("상담 상황로", "상담 상황으로")
+    for wrong, correct in (
+        ("문장제을", "문장제를"),
+        ("자료 해석 문제을", "자료 해석 문제를"),
+        ("확률의 경우 나누기을", "확률의 경우 나누기를"),
+        ("정리을", "정리를"),
+        ("유리수와 순환소수을", "유리수와 순환소수를"),
+        ("와와학습코칭학원로", "와와학습코칭학원으로"),
+        ("와와학습코칭학원와", "와와학습코칭학원과"),
+    ):
+        text = text.replace(wrong, correct)
+    text = re.sub(r"상담 상황\s+(\d+)\.\s*상담 상황\s+\1\s*[.｜:]\s*", r"상담 상황 \1. ", text)
     text = re.sub(r"항목(?=중심|관련|기준|관점)", "항목 ", text)
     return normalize(text)
 
@@ -668,13 +969,25 @@ def naturalize_cases(cases: list[str], context: dict[str, object]) -> list[str]:
         ):
             sentences.pop(0)
         value = " ".join(sentences) or value
-        value = re.sub(r"^상담 상황\s*\d+\.\s*", "", value)
+        value = re.sub(r"^(?:상담 상황\s*)+\d+\s*(?:[.｜:·-]\s*)+", "", value)
+        value = re.sub(
+            r"^학부모\s+상담\s+상황\s+예시(?:\s*\d+)?\s*(?:[.｜:·-]\s*)+",
+            "",
+            value,
+        )
         natural_cases.append(f"상담 상황 {index}. {dedupe_text_sentences(value)}")
     return natural_cases
 
 
 def compact_meta(original: str, title: str, row: dict[str, str], config: dict[str, str]) -> str:
     original = normalize(original)
+    locality = title[: -len(config["label"])].strip() if title.endswith(config["label"]) else ""
+    if locality:
+        original = re.sub(
+            rf"(?<![가-힣A-Za-z0-9]){re.escape(locality)}\s+{re.escape(locality)}(?![가-힣A-Za-z0-9])",
+            locality,
+            original,
+        )
     if 70 <= len(original) <= 100:
         return original
     region = normalize(f"{row['지역']} {row['시or구']}")
@@ -685,6 +998,32 @@ def compact_meta(original: str, title: str, row: dict[str, str], config: dict[st
     if len(value) > 100:
         value = value[:97].rstrip(" ,·") + "."
     return value
+
+
+def validated_meta(
+    value: str, title: str, row: dict[str, str], config: dict[str, str], context: dict[str, object],
+) -> str:
+    """Keep the final, transformed description within a complete 70–100 chars."""
+    value = normalize(value)
+    if 70 <= len(value) <= 100:
+        return value
+    region = normalize(f"{row['지역']} {row['시or구']}")
+    candidates = [
+        (
+            f"{region} {title}의 {config['subject']} 진단, 학교 진도, {context['learning_focus']}, "
+            "과제·오답 관리와 상담 전 센터 확인 기준을 정리했습니다."
+        ),
+        (
+            f"{title} 선택 전에 확인할 {config['level']} {config['subject']} 진단, 학교 진도, "
+            f"{context['learning_focus']}, 과제·오답 관리와 지역 센터 상담 기준을 정리했습니다."
+        ),
+    ]
+    for candidate in candidates:
+        candidate = normalize(candidate)
+        if 70 <= len(candidate) <= 100:
+            return candidate
+    compact = normalize(candidates[-1])
+    return compact[:97].rstrip(" ,·") + "."
 
 
 def paragraph_html(value: str, css: str = "") -> str:
@@ -783,7 +1122,8 @@ def offer_schema(row: dict[str, str]) -> list[dict]:
 
 
 def schools_for(row: dict[str, str], field: str) -> list[str]:
-    return [normalize(value) for value in row.get(field, "").split(",") if normalize(value)]
+    values = [normalize(value) for value in row.get(field, "").split(",") if normalize(value)]
+    return list(dict.fromkeys(values))
 
 
 def resolve_map_file(raw_name: str, slug: str) -> str:
@@ -898,7 +1238,7 @@ def detail_graph(
         ],
     }
     related = []
-    related_categories = [item for item in CATEGORIES if item["slug"] != config["slug"]]
+    related_categories = related_categories_for(config)
     for position, item in enumerate(related_categories, 1):
         related.append({
             "@type": "ListItem", "position": position,
@@ -931,10 +1271,20 @@ def detail_page(
     slug: str, row: dict[str, str], map_file: str,
 ) -> str:
     title = normalize(sections["페이지타이틀"])
-    context = content_context(title=title, locality=locality, slug=slug, row=row, config=config)
-    description = final_polish_text(naturalize_text(
-        compact_meta(sections["메타설명"], title, row, config), context, "meta-description"
-    ))
+    source_text = "\n".join(sections.values())
+    context = content_context(
+        title=title, locality=locality, slug=slug, row=row, config=config,
+        source_text=source_text,
+    )
+    description = validated_meta(
+        final_polish_text(naturalize_text(
+            compact_meta(sections["메타설명"], title, row, config), context, "meta-description"
+        )),
+        title,
+        row,
+        config,
+        context,
+    )
     raw_intro, raw_body_sections = parse_body(sections["본문"])
     intro, body_sections = individualize_body(raw_intro, raw_body_sections, context)
     # The same transformed FAQ list feeds both the visible accordions and
@@ -983,7 +1333,7 @@ def detail_page(
     )
     related_links = "".join(
         f'<a href="/과목별학원/{item["slug"]}/{esc(slug)}/">{esc(locality)} {esc(item["label"])}</a>'
-        for item in CATEGORIES if item["slug"] != config["slug"]
+        for item in related_categories_for(config)
     )
     related_links += f'<a href="/전국학원/{esc(national_slug)}/">{esc(locality)} 전국학원 기본 안내</a>'
     head = page_head(
@@ -1103,7 +1453,7 @@ def category_hub(rows: list[dict[str, str]], config: dict[str, str]) -> str:
 def subject_hub() -> str:
     canonical = absolute_url("과목별학원")
     title = f"과목별학원 | {SITE_NAME}"
-    description = "고등학생 영어와 수학의 지역별 학습 안내를 과목과 학습 상황에 따라 찾아볼 수 있도록 정리했습니다."
+    description = "중학생과 고등학생 영어·수학의 지역별 학습 안내를 학년과 과목, 학생 상황에 따라 찾아볼 수 있도록 정리했습니다."
     items = [
         {"@type": "ListItem", "position": index, "name": config["label"], "url": absolute_url("과목별학원", config["slug"])}
         for index, config in enumerate(CATEGORIES, 1)
@@ -1119,14 +1469,26 @@ def subject_hub() -> str:
     )
     head = page_head(title=title, description=description, canonical=canonical, asset_prefix="../", image_url=SHARE_IMAGE_URL, graph=graph, page_type="website")
     return f'''<!doctype html><html lang="ko">{head}<body class="general-page subject-page academy-page">{site_header("subjects")}<main id="main">
-      <header class="academy-hero reveal"><div class="academy-hero-copy"><nav class="academy-breadcrumb" aria-label="현재 위치"><a href="/">홈</a><span>›</span><span aria-current="page">과목별학원</span></nav><p class="eyebrow">Subject &amp; Grade Academy Guide</p><h1>과목과 학년을 먼저 고르고,<br>동네별 안내를 확인하세요.</h1><p class="lead">고등 영어와 수학은 현재 단원, 학교 자료, 오답 유형에 따라 확인할 관리 기준이 달라집니다. 필요한 카테고리를 선택하면 371개 동네별 학습 안내와 확인된 센터 정보를 살펴볼 수 있습니다.</p></div><aside class="academy-hero-aside"><strong>2 × 371</strong><span>2개 카테고리 · 742개 지역별 학습 안내</span></aside></header>
+      <header class="academy-hero reveal"><div class="academy-hero-copy"><nav class="academy-breadcrumb" aria-label="현재 위치"><a href="/">홈</a><span>›</span><span aria-current="page">과목별학원</span></nav><p class="eyebrow">Subject &amp; Grade Academy Guide</p><h1>과목과 학년을 먼저 고르고,<br>동네별 안내를 확인하세요.</h1><p class="lead">중등·고등 영어와 수학은 현재 단원, 학교 자료, 오답 유형에 따라 확인할 관리 기준이 달라집니다. 필요한 카테고리를 선택하면 371개 동네별 학습 안내와 확인된 센터 정보를 살펴볼 수 있습니다.</p></div><aside class="academy-hero-aside"><strong>{len(CATEGORIES)} × 371</strong><span>{len(CATEGORIES)}개 카테고리 · {len(CATEGORIES) * 371:,}개 지역별 학습 안내</span></aside></header>
       <section class="section"><div class="section-head reveal"><p class="eyebrow blue">Choose A Learning Track</p><h2>현재 학년과 과목에 맞는 안내</h2><p class="lead">학년과 과목별로 확인할 기준을 나누고, 동네 페이지는 지역별 학습 안내와 확인된 센터 자료를 기반으로 구성했습니다.</p></div><div class="academy-category-grid">{cards}</div></section>
-      <section class="process-band"><div class="section"><div class="process-intro reveal"><p class="eyebrow">How To Use</p><h2>페이지를 확인하는 순서</h2><p class="lead">광고 문구보다 학생에게 적용할 수 있는 정보가 있는지 차례로 확인하세요.</p></div><div class="process-list"><article class="process-item reveal"><div><h3>과목 선택</h3><p>고등학생 영어와 수학 중 현재 우선 관리가 필요한 과목을 고릅니다.</p></div></article><article class="process-item reveal"><div><h3>동네·센터 정보 확인</h3><p>지역 검색을 사용해 주소, 수업 가능 학년, 학교와 교습비 안내 자료를 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>학습 안내와 FAQ 비교</h3><p>학생 상황, 학교 학습, 과제·오답 관리 기준과 상담 질문을 읽어봅니다.</p></div></article><article class="process-item reveal"><div><h3>상담 전 우선순위 정리</h3><p>최근 학습 결과와 어려운 단원을 준비해 먼저 해결할 문제를 정합니다.</p></div></article></div></div></section>
+      <section class="process-band"><div class="section"><div class="process-intro reveal"><p class="eyebrow">How To Use</p><h2>페이지를 확인하는 순서</h2><p class="lead">광고 문구보다 학생에게 적용할 수 있는 정보가 있는지 차례로 확인하세요.</p></div><div class="process-list"><article class="process-item reveal"><div><h3>학년·과목 선택</h3><p>중학생과 고등학생 가운데 현재 학년을 고른 뒤 영어와 수학 중 우선 관리가 필요한 과목을 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>동네·센터 정보 확인</h3><p>지역 검색을 사용해 주소, 수업 가능 학년, 학교와 교습비 안내 자료를 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>학습 안내와 FAQ 비교</h3><p>학생 상황, 학교 학습, 과제·오답 관리 기준과 상담 질문을 읽어봅니다.</p></div></article><article class="process-item reveal"><div><h3>상담 전 우선순위 정리</h3><p>최근 학습 결과와 어려운 단원을 준비해 먼저 해결할 문제를 정합니다.</p></div></article></div></div></section>
       <section class="cta-section"><div class="cta-panel shell reveal"><p class="eyebrow">Start With The Student</p><h2>카테고리를 고른 뒤에는 학생의 현재 기록을 함께 보세요.</h2><p class="lead">같은 동네와 학년이어도 필요한 수업 순서는 다를 수 있습니다. 최근 자료를 기준으로 상담의 첫 질문을 정리해보세요.</p><div class="actions"><a class="btn btn-primary" href="/상담문의/">상담 준비하기</a><a class="btn btn-blue" href="/학습가이드/">학습가이드 보기</a></div></div></section>
     </main>{site_footer()}<script src="../assets/subject-directory.js" defer></script></body></html>'''
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="학습관리학원 과목별 지역 페이지 생성")
+    parser.add_argument(
+        "--category",
+        action="append",
+        choices=[config["slug"] for config in CATEGORIES],
+        help="지정한 카테고리만 다시 생성합니다. 여러 번 지정할 수 있습니다.",
+    )
+    args = parser.parse_args()
+    selected_categories = [
+        config for config in CATEGORIES
+        if not args.category or config["slug"] in set(args.category)
+    ]
     center_rows = load_csv("센터정보 정리.csv")
     map_rows = load_csv("이미지링크.csv")
     if len(center_rows) != 371 or len(map_rows) != 371:
@@ -1141,7 +1503,7 @@ def main() -> None:
     generated = 0
     category_report = {}
     all_titles: set[str] = set()
-    for config in CATEGORIES:
+    for config in selected_categories:
         zip_path = SOURCE_DIR / config["zip"]
         if not zip_path.exists():
             raise FileNotFoundError(zip_path)
@@ -1208,7 +1570,13 @@ def main() -> None:
     # Only count the current HTML inventory here; the build pipeline refreshes
     # the public discovery files after every page and navigation update.
     sitemap_count = sum(1 for _ in ROOT.rglob("index.html"))
-    report = {"generated_detail_pages": generated, "category_hubs": len(CATEGORIES), "sitemap_urls": sitemap_count, "categories": category_report, "date": TODAY}
+    report = {
+        "generated_detail_pages": generated,
+        "category_hubs": len(selected_categories),
+        "sitemap_urls": sitemap_count,
+        "categories": category_report,
+        "date": TODAY,
+    }
     reports = ROOT / "reports"
     reports.mkdir(exist_ok=True)
     (reports / "subject_generation_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

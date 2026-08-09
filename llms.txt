@@ -12,6 +12,8 @@
 - 과목별학원: https://xn--zb0b93vh4ggmeqzwda.com/과목별학원/
 - 고등학생 수학학원: https://xn--zb0b93vh4ggmeqzwda.com/과목별학원/고등학생수학학원/
 - 고등학생 영어학원: https://xn--zb0b93vh4ggmeqzwda.com/과목별학원/고등학생영어학원/
+- 중학생 수학학원: https://xn--zb0b93vh4ggmeqzwda.com/과목별학원/중학생수학학원/
+- 중학생 영어학원: https://xn--zb0b93vh4ggmeqzwda.com/과목별학원/중학생영어학원/
 - 사이트맵: https://xn--zb0b93vh4ggmeqzwda.com/sitemap.xml
 
 ## 사이트가 다루는 주제
@@ -19,7 +21,7 @@
 - 초등학생 공부 습관 형성
 - 중학생 내신 대비와 플래너 관리
 - 고등학생 영어·수학·국어 학습관리
-- 동네별 고등학생 수학·영어 학습 진단과 내신 대비 기준
+- 동네별 중학생·고등학생 수학·영어 학습 진단과 내신 대비 기준
 - 상담 전 학부모 체크리스트
 - 학습 진단과 과목별 약점 분석
 - 오답 원인 구분과 재학습

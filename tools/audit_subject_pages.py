@@ -33,6 +33,36 @@ SCRIPT_RE = re.compile(
 TAG_RE = re.compile(r"<[^>]+>")
 ATTR_RE = re.compile(r'\b(?:href|src)=["\']([^"\']+)["\']', re.IGNORECASE)
 IMG_RE = re.compile(r'<img\b[^>]*\bsrc=["\']([^"\']+)["\'][^>]*>', re.IGNORECASE)
+UNVERIFIED_ACADEMY_TERM_RE = re.compile(
+    r"학원\s*(?:온라인\s*수업|대면\s*수업|화상\s*수업|실시간\s*수업|자습실|스터디룸|상담실|강의실|"
+    r"휴게실|사물함|교재실|자료실|예약\s*관리|전자\s*계약|관리\s*솔루션|문자\s*발송|미납\s*관리|"
+    r"출결\s*앱|데스크|데이터\s*관리|코디네이터|창업|개인정보\s*관리|안전\s*관리|방역\s*관리|"
+    r"청결\s*관리|출입\s*관리|보안\s*관리|수강생\s*관리|회원\s*관리|고객\s*관리|결제\s*관리|결제\s*시스템|"
+    r"매출\s*관리|수납\s*관리|문서\s*관리|관리\s*앱|관리\s*프로그램)"
+    r"(?:\s*(?:시스템|프로그램|앱))?"
+)
+BROKEN_CONTENT_PHRASES = (
+    "학습관리을",
+    "학습관리은",
+    "확인 항목가",
+    "상담 상황로",
+    "상담 상황 1. 상담 상황 1",
+    "상담 상황 2. 상담 상황 2",
+)
+MIDDLE_QUALITY_PHRASES = (
+    "검색 결과 설명에는",
+    "검색 결과에서 바로 답을 찾도록 구성했습니다",
+    "학원 운영이나 학습 관리에서 살펴볼 수 있는 보조 단서",
+    "학부모 상담 상황 예시",
+    "기준으로 작성했습니다",
+    "문장제을",
+    "자료 해석 문제을",
+    "확률의 경우 나누기을",
+    "정리을",
+    "유리수와 순환소수을",
+    "와와학습코칭학원로",
+    "와와학습코칭학원와",
+)
 
 
 def plain_text(value: str) -> str:
@@ -267,6 +297,7 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
             title = ""
         else:
             title = plain_text(h1_matches[0])
+        locality = title[: -len(config["label"])].strip() if title.endswith(config["label"]) else slug
 
         title_match = re.search(r"<title>(.*?)</title>", source, flags=re.IGNORECASE | re.DOTALL)
         meta_match = re.search(
@@ -300,6 +331,8 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
             metas.append(meta)
             if not 70 <= len(meta) <= 100:
                 errors.append(f"meta-length:{category_slug}/{slug}:{len(meta)}")
+            if locality and re.search(rf"{re.escape(locality)}\s+{re.escape(locality)}", meta):
+                errors.append(f"meta-repeated-locality:{category_slug}/{slug}")
         if title and not title.endswith(config["label"]):
             errors.append(f"h1-category-mismatch:{category_slug}/{slug}")
         if not canonical_match:
@@ -367,6 +400,16 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
         for authoring_term in ("이 원고", "원고용", "D열", "구조화 데이터", "제공 키워드"):
             if authoring_term in plain_text(source):
                 errors.append(f"authoring-term:{category_slug}/{slug}:{authoring_term}")
+        for broken_phrase in BROKEN_CONTENT_PHRASES:
+            if broken_phrase in plain_text(source):
+                errors.append(f"broken-content-phrase:{category_slug}/{slug}:{broken_phrase}")
+        if category_slug.startswith("중학생"):
+            visible_text = plain_text(source)
+            if UNVERIFIED_ACADEMY_TERM_RE.search(visible_text):
+                errors.append(f"unverified-academy-term:{category_slug}/{slug}")
+            for phrase in MIDDLE_QUALITY_PHRASES:
+                if phrase in visible_text:
+                    errors.append(f"middle-quality-phrase:{category_slug}/{slug}:{phrase}")
 
         images = IMG_RE.findall(source)
         if not images:
@@ -383,7 +426,6 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
         text = article_text(source)
         if not text:
             errors.append(f"article-missing:{category_slug}/{slug}")
-        locality = title[: -len(config["label"])].strip() if title.endswith(config["label"]) else slug
         records.append((slug, locality, title, text))
 
     report = {
@@ -436,7 +478,7 @@ def sitemap_audit(expected_urls: set[str]) -> tuple[dict, list[str]]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="학습관리학원 과목별학원 2×371 정적 페이지 감사")
+    parser = argparse.ArgumentParser(description="학습관리학원 과목별학원 카테고리별 371개 정적 페이지 감사")
     parser.add_argument(
         "--category",
         action="append",
