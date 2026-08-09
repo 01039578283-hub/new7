@@ -12,7 +12,15 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
-from generate_subject_pages import CATEGORIES, DOMAIN, ROOT, SITE_NAME, absolute_url
+from generate_subject_pages import (
+    CATEGORIES,
+    DOMAIN,
+    ROOT,
+    SITE_NAME,
+    TODAY,
+    absolute_url,
+    center_entity_id,
+)
 
 
 REQUIRED_SCHEMA_TYPES = {
@@ -26,6 +34,23 @@ REQUIRED_SCHEMA_TYPES = {
     "ItemList",
 }
 FORBIDDEN_SCHEMA_TYPES = {"Review", "AggregateRating"}
+PROVENANCE_NAME = "센터정보 정리 자료"
+PROVENANCE_TEXT = f"자료 기준 {PROVENANCE_NAME} · 최종 검수 {TODAY}"
+AUTHORING_CONTENT_PHRASES = (
+    "이 원고",
+    "원고용",
+    "D열",
+    "구조화 데이터",
+    "제공 키워드",
+    "생성 로직",
+    "랜덤 선택",
+    "SEO용",
+    "AEO용",
+    "GEO용",
+)
+DUPLICATED_TOKEN_RE = re.compile(
+    r"\b(초등학생|중학생|고등학생|학습|복습|상담|확인|재확인|수업|관리)\s+\1\b"
+)
 SCRIPT_RE = re.compile(
     r'<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
     re.IGNORECASE | re.DOTALL,
@@ -93,6 +118,9 @@ ELEMENTARY_QUALITY_PHRASES = (
     "개념와",
     "표은",
     "초등학생 학생",
+    "중학생 학생",
+    "고등학생 학생",
+    "경우인 경우",
     "초등학생으로 넘어가며",
     "재확인 확인",
     "검색 확인 항목",
@@ -222,6 +250,172 @@ def schema_breadcrumb(data_blocks: list[object]) -> list[str]:
     return []
 
 
+def reference_ids(value: object) -> set[str]:
+    found: set[str] = set()
+    if isinstance(value, dict):
+        node_id = value.get("@id")
+        if isinstance(node_id, str):
+            found.add(node_id)
+        for child in value.values():
+            found.update(reference_ids(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.update(reference_ids(child))
+    return found
+
+
+def visible_fact_cards(source: str) -> dict[str, str]:
+    match = re.search(
+        r'<section\b[^>]*class=["\'][^"\']*\bacademy-facts\b[^"\']*["\'][^>]*>'
+        r"(.*?)</section>",
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not match:
+        return {}
+    return {
+        plain_text(label): plain_text(value)
+        for label, value in re.findall(
+            r'<div\b[^>]*class=["\'][^"\']*\bacademy-fact-card\b[^"\']*["\'][^>]*>'
+            r"\s*<strong\b[^>]*>(.*?)</strong>\s*<span\b[^>]*>(.*?)</span>\s*</div>",
+            match.group(1),
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+    }
+
+
+def class_text(source: str, tag: str, css_class: str) -> str:
+    match = re.search(
+        rf'<{tag}\b[^>]*class=["\'][^"\']*\b{re.escape(css_class)}\b[^"\']*["\'][^>]*>'
+        rf"(.*?)</{tag}>",
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return plain_text(match.group(1)) if match else ""
+
+
+def accessibility_errors(source: str, page_key: str) -> list[str]:
+    errors: list[str] = []
+    if not re.search(
+        r'<a\b[^>]*class=["\'][^"\']*\bsubject-skip-link\b[^"\']*["\'][^>]*href=["\']#main["\']',
+        source,
+        flags=re.IGNORECASE,
+    ):
+        errors.append(f"accessibility-skip-link:{page_key}")
+    main_count = len(re.findall(r'<main\b[^>]*\bid=["\']main["\']', source, flags=re.IGNORECASE))
+    if main_count != 1:
+        errors.append(f"accessibility-main-count:{page_key}:{main_count}")
+
+    brand = re.search(
+        r'(<a\b[^>]*class=["\'][^"\']*\bbrand\b[^"\']*["\'][^>]*>)(.*?)</a>',
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not brand:
+        errors.append(f"accessibility-brand-missing:{page_key}")
+    else:
+        label = re.search(r'\baria-label=["\']([^"\']+)["\']', brand.group(1), flags=re.IGNORECASE)
+        visible = re.search(
+            r'<span\b[^>]*class=["\'][^"\']*\bbrand-text\b[^"\']*["\'][^>]*>(.*?)(?:<small\b|</span>)',
+            brand.group(2),
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        visible_name = plain_text(visible.group(1)) if visible else ""
+        expected_label = f"{visible_name} 홈페이지" if visible_name else f"{SITE_NAME} 홈페이지"
+        if not label or plain_text(label.group(1)) != expected_label:
+            errors.append(f"accessibility-brand-label:{page_key}")
+
+    breadcrumb = re.search(
+        r'(<nav\b[^>]*class=["\'][^"\']*\bacademy-breadcrumb\b[^"\']*["\'][^>]*>)(.*?)</nav>',
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not breadcrumb:
+        errors.append(f"accessibility-breadcrumb-missing:{page_key}")
+    else:
+        nav_label = re.search(r'\baria-label=["\']([^"\']+)["\']', breadcrumb.group(1), flags=re.IGNORECASE)
+        if not nav_label or plain_text(nav_label.group(1)) != "현재 위치":
+            errors.append(f"accessibility-breadcrumb-label:{page_key}")
+        separators = re.findall(
+            r'<span\b([^>]*)>\s*›\s*</span>', breadcrumb.group(2), flags=re.IGNORECASE | re.DOTALL
+        )
+        if any(not re.search(r'\baria-hidden=["\']true["\']', attrs, flags=re.IGNORECASE) for attrs in separators):
+            errors.append(f"accessibility-breadcrumb-separator:{page_key}")
+        current_count = len(re.findall(
+            r'<(?:a|span)\b[^>]*\baria-current=["\']page["\']', breadcrumb.group(2), flags=re.IGNORECASE
+        ))
+        if current_count != 1:
+            errors.append(f"accessibility-breadcrumb-current:{page_key}:{current_count}")
+
+    for index, image_tag in enumerate(re.findall(r"<img\b[^>]*>", source, flags=re.IGNORECASE), 1):
+        alt = re.search(r'\balt=["\']([^"\']*)["\']', image_tag, flags=re.IGNORECASE)
+        if not alt or not plain_text(alt.group(1)):
+            errors.append(f"accessibility-image-alt:{page_key}:{index}")
+    return errors
+
+
+def color_luminance(value: str) -> float:
+    value = value.lstrip("#")
+    channels = [int(value[index : index + 2], 16) / 255 for index in (0, 2, 4)]
+    linear = [channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4 for channel in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def contrast_ratio(foreground: str, background: str) -> float:
+    lighter, darker = sorted([color_luminance(foreground), color_luminance(background)], reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def css_accessibility_audit() -> tuple[dict, list[str]]:
+    path = ROOT / "assets" / "subject.css"
+    errors: list[str] = []
+    if not path.is_file():
+        return {"exists": False}, ["accessibility-css-missing"]
+    source = path.read_text(encoding="utf-8")
+    selectors = {
+        "breadcrumb_text": r"\.subject-page\s+\.academy-breadcrumb\s*\{([^}]*)\}",
+        "breadcrumb_link": r"\.subject-page\s+\.academy-breadcrumb\s+a\s*\{([^}]*)\}",
+    }
+    ratios: dict[str, float] = {}
+    for name, pattern in selectors.items():
+        block = re.search(pattern, source, flags=re.IGNORECASE | re.DOTALL)
+        color = re.search(r"\bcolor\s*:\s*(#[0-9a-f]{6})", block.group(1), flags=re.IGNORECASE) if block else None
+        if not color:
+            errors.append(f"accessibility-contrast-color-missing:{name}")
+            continue
+        ratio = contrast_ratio(color.group(1), "#f5f7fb")
+        ratios[name] = round(ratio, 2)
+        if ratio < 4.5:
+            errors.append(f"accessibility-contrast:{name}:{ratio:.2f}")
+    return {"exists": True, "background": "#f5f7fb", "ratios": ratios, "minimum": 4.5}, errors
+
+
+def hub_accessibility_audit(configs: list[dict[str, str]]) -> tuple[dict, list[str]]:
+    paths = [("과목별학원", ROOT / "과목별학원" / "index.html")]
+    paths.extend((config["slug"], ROOT / "과목별학원" / config["slug"] / "index.html") for config in configs)
+    errors: list[str] = []
+    checked_links = 0
+    checked = 0
+    for key, page in paths:
+        if not page.is_file():
+            errors.append(f"hub-missing:{key}")
+            continue
+        checked += 1
+        source = page.read_text(encoding="utf-8")
+        errors.extend(accessibility_errors(source, f"hub/{key}"))
+        h1_count = len(re.findall(r"<h1\b[^>]*>", source, flags=re.IGNORECASE))
+        if h1_count != 1:
+            errors.append(f"hub-h1-count:{key}:{h1_count}")
+        for value in ATTR_RE.findall(source):
+            target = local_target(page, value)
+            if target is None:
+                continue
+            checked_links += 1
+            if not target.exists():
+                errors.append(f"hub-local-resource-missing:{key}:{value}")
+    return {"pages_expected": len(paths), "pages_checked": checked, "checked_local_references": checked_links}, errors
+
+
 def local_target(page: Path, value: str) -> Path | None:
     value = normalize_url(value)
     if not value or value.startswith(("#", "tel:", "mailto:", "data:", "javascript:")):
@@ -321,6 +515,9 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
 
     titles: list[str] = []
     metas: list[str] = []
+    summaries: list[str] = []
+    faq_signatures: list[str] = []
+    case_signatures: list[str] = []
     records: list[tuple[str, str, str, str]] = []
     expected_urls: set[str] = {absolute_url("과목별학원", category_slug)}
     checked_links = 0
@@ -329,6 +526,8 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
     for page in pages:
         slug = page.parent.name
         source = page.read_text(encoding="utf-8")
+        page_key = f"{category_slug}/{slug}"
+        errors.extend(accessibility_errors(source, page_key))
         expected_url = absolute_url("과목별학원", category_slug, slug)
         expected_urls.add(expected_url)
 
@@ -406,14 +605,77 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
 
         article_node: dict = {}
         organization_node: dict = {}
+        local_business_node: dict = {}
+        webpage_node: dict = {}
+        service_node: dict = {}
+        source_node: dict = {}
         for block in blocks:
             article_node = article_node or graph_node(block, "Article")
             organization_node = organization_node or graph_node(block, "EducationalOrganization")
+            local_business_node = local_business_node or graph_node(block, "LocalBusiness")
+            webpage_node = webpage_node or graph_node(block, "WebPage")
+            service_node = service_node or graph_node(block, "Service")
+            source_node = source_node or graph_node(block, "CreativeWork")
         for key in ("about", "mentions", "hasPart", "articleSection"):
             if key not in article_node:
                 errors.append(f"article-field-missing:{category_slug}/{slug}:{key}")
         if "makesOffer" not in organization_node:
             errors.append(f"organization-field-missing:{category_slug}/{slug}:makesOffer")
+
+        organization_types = organization_node.get("@type", [])
+        if isinstance(organization_types, str):
+            organization_types = [organization_types]
+        if not {"EducationalOrganization", "LocalBusiness"}.issubset(set(organization_types)):
+            errors.append(f"organization-type-identity:{category_slug}/{slug}")
+        org_id = plain_text(str(organization_node.get("@id", "")))
+        local_id = plain_text(str(local_business_node.get("@id", "")))
+        address = organization_node.get("address", {})
+        if not isinstance(address, dict):
+            address = {}
+        center_name = plain_text(str(organization_node.get("name", "")))
+        street_address = plain_text(str(address.get("streetAddress", "")))
+        expected_org_id = center_entity_id(center_name, street_address) if center_name and street_address else ""
+        if not expected_org_id or org_id != expected_org_id or local_id != expected_org_id:
+            errors.append(f"organization-stable-id:{category_slug}/{slug}")
+        if reference_ids(service_node.get("provider")) != {org_id}:
+            errors.append(f"service-provider-id:{category_slug}/{slug}")
+        if org_id not in reference_ids(webpage_node.get("about")):
+            errors.append(f"webpage-organization-reference:{category_slug}/{slug}")
+        if reference_ids(article_node.get("author")) != {org_id}:
+            errors.append(f"article-author-id:{category_slug}/{slug}")
+        if reference_ids(article_node.get("publisher")) != {org_id}:
+            errors.append(f"article-publisher-id:{category_slug}/{slug}")
+
+        for node_name, node in (("webpage", webpage_node), ("article", article_node)):
+            if node.get("dateModified") != TODAY:
+                errors.append(f"{node_name}-date-modified:{category_slug}/{slug}")
+        if (
+            source_node.get("@id") != DOMAIN + "/#center-information-source"
+            or source_node.get("name") != PROVENANCE_NAME
+            or source_node.get("dateModified") != TODAY
+        ):
+            errors.append(f"provenance-schema:{category_slug}/{slug}")
+        source_id = str(source_node.get("@id", ""))
+        if source_id not in reference_ids(webpage_node.get("isBasedOn")):
+            errors.append(f"webpage-provenance-reference:{category_slug}/{slug}")
+        if source_id not in reference_ids(article_node.get("isBasedOn")):
+            errors.append(f"article-provenance-reference:{category_slug}/{slug}")
+
+        facts = visible_fact_cards(source)
+        if not facts:
+            errors.append(f"verified-facts-missing:{category_slug}/{slug}")
+        else:
+            if facts.get("센터") != center_name:
+                errors.append(f"verified-center-mismatch:{category_slug}/{slug}")
+            if facts.get("주소") != street_address:
+                errors.append(f"verified-address-mismatch:{category_slug}/{slug}")
+            registration = facts.get("교육지원청 등록 정보", "")
+            if registration and registration != "제공 자료에서 확인 후 안내":
+                if plain_text(str(organization_node.get("identifier", ""))) != registration:
+                    errors.append(f"verified-identifier-mismatch:{category_slug}/{slug}")
+        provenance = class_text(source, "p", "academy-provenance")
+        if provenance != PROVENANCE_TEXT:
+            errors.append(f"provenance-visible:{category_slug}/{slug}")
 
         screen_faq = visible_faq(source)
         structured_faq = schema_faq(blocks)
@@ -421,6 +683,9 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
             errors.append(f"faq-screen-missing:{category_slug}/{slug}")
         elif screen_faq != structured_faq:
             errors.append(f"faq-mismatch:{category_slug}/{slug}")
+        summaries.append(class_text(source, "section", "academy-summary"))
+        faq_signatures.append(json.dumps(screen_faq, ensure_ascii=False, separators=(",", ":")))
+        case_signatures.append(class_text(source, "div", "academy-case-list"))
 
         media_match = re.search(
             r'<section\b[^>]*class=["\'][^"\']*\bacademy-media-section\b[^"\']*["\'][^>]*>(.*?)<div\b[^>]*class=["\'][^"\']*\bacademy-media-grid\b',
@@ -438,14 +703,17 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
         if not alt_match or plain_text(alt_match.group(1)) != expected_alt:
             errors.append(f"representative-image-alt:{category_slug}/{slug}")
 
-        for authoring_term in ("이 원고", "원고용", "D열", "구조화 데이터", "제공 키워드"):
-            if authoring_term in plain_text(source):
+        visible_text = plain_text(source)
+        for authoring_term in AUTHORING_CONTENT_PHRASES:
+            if authoring_term in visible_text:
                 errors.append(f"authoring-term:{category_slug}/{slug}:{authoring_term}")
         for broken_phrase in BROKEN_CONTENT_PHRASES:
-            if broken_phrase in plain_text(source):
+            if broken_phrase in visible_text:
                 errors.append(f"broken-content-phrase:{category_slug}/{slug}:{broken_phrase}")
+        duplicate_token = DUPLICATED_TOKEN_RE.search(visible_text)
+        if duplicate_token:
+            errors.append(f"broken-duplicate-token:{category_slug}/{slug}:{duplicate_token.group(0)}")
         if category_slug.startswith(("초등학생", "중학생")):
-            visible_text = plain_text(source)
             if UNVERIFIED_ACADEMY_TERM_RE.search(visible_text):
                 errors.append(f"unverified-academy-term:{category_slug}/{slug}")
             quality_phrases = STUDENT_QUALITY_PHRASES
@@ -472,6 +740,27 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
             errors.append(f"article-missing:{category_slug}/{slug}")
         records.append((slug, locality, title, text))
 
+    diversity_values = {
+        "title": titles,
+        "meta": metas,
+        "summary": summaries,
+        "faq": faq_signatures,
+        "case": case_signatures,
+    }
+    diversity_report: dict[str, dict[str, int]] = {}
+    for name, values in diversity_values.items():
+        nonempty = [value for value in values if value]
+        duplicates = len(nonempty) - len(set(nonempty))
+        diversity_report[name] = {
+            "values": len(nonempty),
+            "unique": len(set(nonempty)),
+            "exact_duplicates": duplicates,
+        }
+        if len(nonempty) != len(pages):
+            errors.append(f"diversity-missing-{name}:{category_slug}:{len(pages) - len(nonempty)}")
+        if duplicates:
+            errors.append(f"diversity-exact-duplicate-{name}:{category_slug}:{duplicates}")
+
     report = {
         "category": config["label"],
         "slug": category_slug,
@@ -480,6 +769,7 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
         "error_sample": errors[:30],
         "unique_titles": len(set(titles)),
         "unique_meta_descriptions": len(set(metas)),
+        "diversity": diversity_report,
         "meta_length": {
             "min": min(map(len, metas)) if metas else 0,
             "max": max(map(len, metas)) if metas else 0,
@@ -557,7 +847,24 @@ def main() -> int:
                 similarity[category] = result
 
     sitemap_report, sitemap_errors = sitemap_audit(expected_urls)
-    structural_errors = sum(report["errors"] for report in category_reports) + len(sitemap_errors)
+    css_accessibility_report, css_accessibility_errors = css_accessibility_audit()
+    hub_report, hub_errors = hub_accessibility_audit(selected)
+    similarity_errors: list[str] = []
+    for category, result in similarity.items():
+        if result.get("exact_duplicate_articles", 0):
+            similarity_errors.append(
+                f"similarity-exact-duplicate:{category}:{result['exact_duplicate_articles']}"
+            )
+        pairs = result.get("masked_5_shingle_max_similarity", {}).get("pairs_at_or_above_0_75", 0)
+        if pairs:
+            similarity_errors.append(f"similarity-pairs-at-or-above-0.75:{category}:{pairs}")
+    structural_errors = (
+        sum(report["errors"] for report in category_reports)
+        + len(sitemap_errors)
+        + len(css_accessibility_errors)
+        + len(hub_errors)
+        + len(similarity_errors)
+    )
     output = {
         "site": SITE_NAME,
         "root": str(ROOT),
@@ -566,9 +873,14 @@ def main() -> int:
         "status": "pass" if structural_errors == 0 else "fail",
         "structural_errors": structural_errors,
         "categories": category_reports,
+        "accessibility_css": css_accessibility_report,
+        "accessibility_css_errors": css_accessibility_errors,
+        "hub_accessibility": hub_report,
+        "hub_errors": hub_errors,
         "sitemap": sitemap_report,
         "sitemap_errors": sitemap_errors,
         "similarity": {key: similarity[key] for key in sorted(similarity)},
+        "similarity_errors": similarity_errors,
     }
     rendered = json.dumps(output, ensure_ascii=False, indent=2)
     print(rendered)

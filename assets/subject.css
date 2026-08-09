@@ -55,12 +55,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px 9px;
-  color: #65798b;
+  color: #435d73;
   font-size: 13px;
   font-weight: 800;
 }
 
-.subject-page .academy-breadcrumb a { color: var(--sky-700); }
+.subject-page .academy-breadcrumb a {
+  color: #0d5f8c;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.subject-page .academy-breadcrumb a:hover,
+.subject-page .academy-breadcrumb a:focus-visible { text-decoration: underline; }
 
 .subject-page .academy-hero h1 {
   margin: 18px 0;
@@ -403,6 +410,21 @@
 }
 
 .subject-page .academy-fact-card span { color: #425b70; font-weight: 750; line-height: 1.65; }
+
+.subject-page .academy-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 9px;
+  align-items: center;
+  margin: 15px 0 0;
+  padding-top: 13px;
+  color: #4b6378;
+  border-top: 1px solid var(--subject-line);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.subject-page .academy-provenance strong { color: #17324d; }
 
 .subject-page .academy-school-tags { margin-top: 17px; display: flex; flex-wrap: wrap; gap: 7px; }
 .subject-page .academy-school-tags span {
