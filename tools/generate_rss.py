@@ -73,6 +73,8 @@ def selected_pages() -> list[Path]:
         ROOT / "과목별학원" / "고등학생영어학원" / "index.html",
         ROOT / "과목별학원" / "중학생수학학원" / "index.html",
         ROOT / "과목별학원" / "중학생영어학원" / "index.html",
+        ROOT / "과목별학원" / "초등학생수학학원" / "index.html",
+        ROOT / "과목별학원" / "초등학생영어학원" / "index.html",
     ]
     # RSS는 전체 대량 페이지 목록이 아니라 광역권별 대표 동네 안내만 포함합니다.
     region_seen: set[str] = set()

@@ -49,7 +49,7 @@ BROKEN_CONTENT_PHRASES = (
     "상담 상황 1. 상담 상황 1",
     "상담 상황 2. 상담 상황 2",
 )
-MIDDLE_QUALITY_PHRASES = (
+STUDENT_QUALITY_PHRASES = (
     "검색 결과 설명에는",
     "검색 결과에서 바로 답을 찾도록 구성했습니다",
     "학원 운영이나 학습 관리에서 살펴볼 수 있는 보조 단서",
@@ -62,6 +62,47 @@ MIDDLE_QUALITY_PHRASES = (
     "유리수와 순환소수을",
     "와와학습코칭학원로",
     "와와학습코칭학원와",
+)
+ELEMENTARY_QUALITY_PHRASES = (
+    "루틴를",
+    "복습와",
+    "예습를",
+    "이번 원고",
+    "참고 키워드",
+    "페이지 원고",
+    "후기 예시",
+    "지역 교육 안내문으로 활용할 수 있습니다",
+    "설정의 문장입니다",
+    "참고 확인 항목로",
+    "확인 항목를",
+    "참고어",
+    "수업 운영 방식과 참여도 관리를 설명하는 보조 단서",
+    "영어·수학 확인 항목을 참고해",
+    "이 영어 관리 기준 상담 전",
+    "이 수학 관리 기준 상담 전",
+    "단원를",
+    "관리을",
+    "습관를",
+    "해석를",
+    "보완를",
+    "유형를",
+    "확인 항목는",
+    "확인 항목와",
+    "관리은",
+    "기록와",
+    "개념와",
+    "표은",
+    "초등학생 학생",
+    "초등학생으로 넘어가며",
+    "재확인 확인",
+    "검색 확인 항목",
+    "검색어도 실제로는",
+    "함께 검색한 경우",
+    "정보성 페이지로 구성했습니다",
+    "페이지라면",
+    "학습 기준 선택 기준",
+    "상담 수업",
+    "주간 학습 복습",
 )
 
 
@@ -403,13 +444,16 @@ def audit_category(config: dict[str, str]) -> tuple[dict, list[tuple[str, str, s
         for broken_phrase in BROKEN_CONTENT_PHRASES:
             if broken_phrase in plain_text(source):
                 errors.append(f"broken-content-phrase:{category_slug}/{slug}:{broken_phrase}")
-        if category_slug.startswith("중학생"):
+        if category_slug.startswith(("초등학생", "중학생")):
             visible_text = plain_text(source)
             if UNVERIFIED_ACADEMY_TERM_RE.search(visible_text):
                 errors.append(f"unverified-academy-term:{category_slug}/{slug}")
-            for phrase in MIDDLE_QUALITY_PHRASES:
+            quality_phrases = STUDENT_QUALITY_PHRASES
+            if category_slug.startswith("초등학생"):
+                quality_phrases += ELEMENTARY_QUALITY_PHRASES
+            for phrase in quality_phrases:
                 if phrase in visible_text:
-                    errors.append(f"middle-quality-phrase:{category_slug}/{slug}:{phrase}")
+                    errors.append(f"student-quality-phrase:{category_slug}/{slug}:{phrase}")
 
         images = IMG_RE.findall(source)
         if not images:

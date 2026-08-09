@@ -73,6 +73,28 @@ CATEGORIES = [
         "english": "MIDDLE SCHOOL ENGLISH",
         "summary": "중학교 교과 진도와 단어·문법·독해·서술형 연결을 살피는 지역별 중등 영어 안내입니다.",
     },
+    {
+        "label": "초등학생 수학학원",
+        "slug": "초등학생수학학원",
+        "zip": "초등학생 수학학원.zip",
+        "level": "초등학생",
+        "subject": "수학",
+        "school_field": "타깃학교\n(초)",
+        "grade_field": "가능학년\n(수학)",
+        "english": "ELEMENTARY SCHOOL MATH",
+        "summary": "연산 정확도와 개념 이해, 문장제 조건 해석, 풀이 습관을 함께 확인하는 지역별 초등 수학 안내입니다.",
+    },
+    {
+        "label": "초등학생 영어학원",
+        "slug": "초등학생영어학원",
+        "zip": "초등학생 영어학원.zip",
+        "level": "초등학생",
+        "subject": "영어",
+        "school_field": "타깃학교\n(초)",
+        "grade_field": "가능학년\n(영어)",
+        "english": "ELEMENTARY SCHOOL ENGLISH",
+        "summary": "파닉스·어휘·문장 읽기와 쓰기, 복습 습관을 함께 확인하는 지역별 초등 영어 안내입니다.",
+    },
 ]
 
 # These terms describe an academy's administration, facilities, or delivery
@@ -80,12 +102,13 @@ CATEGORIES = [
 # manuscripts use one as a rotating auxiliary keyword.  Never carry the raw
 # claim into a public page; replace it with the page's verified learning focus.
 UNVERIFIED_ACADEMY_TERM_RE = re.compile(
-    r"학원\s*(?:온라인\s*수업|대면\s*수업|화상\s*수업|실시간\s*수업|자습실|스터디룸|"
+    r"(?:(?:학원\s*)?(?:온라인\s*수업|대면\s*수업|화상\s*수업|실시간\s*수업)|"
+    r"학원\s*(?:자습실|스터디룸|"
     r"상담실|강의실|휴게실|사물함|교재실|자료실|예약\s*관리|전자\s*계약|관리\s*솔루션|"
     r"문자\s*발송|미납\s*관리|출결\s*앱|데스크|데이터\s*관리|코디네이터|창업|"
     r"개인정보\s*관리|안전\s*관리|방역\s*관리|청결\s*관리|출입\s*관리|보안\s*관리|"
     r"수강생\s*관리|회원\s*관리|고객\s*관리|결제\s*관리|결제\s*시스템|매출\s*관리|"
-    r"수납\s*관리|문서\s*관리|관리\s*앱|관리\s*프로그램)"
+    r"수납\s*관리|문서\s*관리|관리\s*앱|관리\s*프로그램))"
     r"(?:\s*(?:시스템|프로그램|앱))?"
 )
 
@@ -211,6 +234,13 @@ def parse_cases(text: str) -> list[str]:
     ]
     if len(bullet_cases) >= 2:
         return bullet_cases
+    # Elementary-math manuscripts place two labeled reviews in one block,
+    # separated only by "또 다른 후기:". Preserve them as two visible cards.
+    if "또 다른 후기:" in value:
+        first, second = value.split("또 다른 후기:", 1)
+        cases = [normalize(first), normalize("또 다른 후기: " + second)]
+        if all(cases):
+            return cases
     chunks = re.split(r"(?=후기\s*(?:예시|형\s*문안)?\s*\d+\.)", value)
     cases = [normalize(chunk) for chunk in chunks if normalize(chunk)]
     if len(cases) == 1:
@@ -242,6 +272,22 @@ def extract_reference_terms(value: str) -> tuple[str, ...]:
         r"(?:은|는|이|가|을|를|과|와|으로|로)?(?=\s*(?:함께|같은|처럼|관점|관련|포인트|내용|항목|[,.)]|$))",
         r"(?:오답 관리와|학습 관리와|내신 준비와|가정 확인법과|시험 준비와)\s*"
         r"([가-힣A-Za-z0-9·_-]+)\s*(?:내용|확인 질문|연결점|포인트|관련 기준)",
+        r"(?m)^##\s+참고\s*키워드\s+(.+?)(?:으로|로)\s+보는\s+관리\s+포인트\s*$",
+        r"참고\s*키워드\s+([가-힣A-Za-z0-9·_-]+?)(?=(?:으로|로|은|는|이|가|을|를|과|와)(?:\s|[,.)]|$))",
+        r"([가-힣A-Za-z0-9·_-]+?)(?:은|는)\s+참고\s*키워드로",
+        r"([가-힣A-Za-z0-9·_-]+?)(?:과|와)\s+영어\s+수학\s+키워드",
+        # Elementary-math manuscripts rotate a single auxiliary term and
+        # repeat it in the final summary.  These anchored forms identify that
+        # term without treating ordinary subject sentences as keywords.
+        r"(?:^|[.!?]\s+)([가-힣A-Za-z0-9· _-]+?)\s+관련\s+상담\s+포인트는\s+학습\s+기록과",
+        r"(?:^|[.!?]\s+)([가-힣A-Za-z0-9· _-]+?)\s+키워드는\s+과장된\s+결과\s+표현이\s+아니라",
+        r"(?:^|[.!?]\s+)([가-힣A-Za-z0-9· _-]+?)(?:을|를)\s+함께\s+볼\s+때\s+초등\s+수학의",
+        r"(?m)^##\s+(.+?)까지\s+함께\s+확인하는\s+학부모를\s+위한\s+안내\s*$",
+        r"([가-힣A-Za-z0-9· _-]+?)\s+키워드와\s+연결되는\s+관리도\s+결국",
+        r"수업\s+방식\s+관련\s+키워드인\s+(.+?)(?:은|는)\s+아이의",
+        r"(?:^|[.!?]\s+)([가-힣A-Za-z0-9· _-]+?)(?:을|를)\s+함께\s+검색한\s+경우에도",
+        r"(?:^|[\n.!?]\s*)([가-힣A-Za-z0-9· _-]+?)(?:을|를)\s+함께\s+볼\s+때",
+        r"(?:^|[\n.!?]\s*)([가-힣A-Za-z0-9· _-]+?)처럼\s+운영과\s+관련된\s+키워드는",
     )
     found: list[str] = []
     for pattern in patterns:
@@ -487,6 +533,51 @@ def enforce_verified_school_claims(
     return " ".join(normalized)
 
 
+def enforce_verified_grade_claims(value: str, context: dict[str, object]) -> str:
+    """Keep elementary grade claims inside the verified subject-grade range.
+
+    Some supplied elementary manuscripts rotate a concrete grade even when the
+    center-data row lists a different range.  Numeric claims are therefore
+    aligned with the corresponding subject column.  When that column is empty,
+    the wording stays at the truthful ``초등학생`` level instead of guessing.
+    """
+    if str(context.get("level")) != "초등학생":
+        return value
+
+    allowed = sorted({
+        int(match)
+        for match in re.findall(r"초(?:등)?\s*([1-6])", str(context.get("grades", "")))
+    })
+    selected = (
+        int(stable_choice(
+            f"{context['seed']}|verified-elementary-grade",
+            [str(item) for item in allowed],
+        ))
+        if allowed else None
+    )
+
+    numeric_grade_re = re.compile(
+        r"초등학교\s*([1-6])\s*학년|초등\s*([1-6])\s*학년|초\s*([1-6])\s*학년|초([1-6])"
+    )
+
+    def replace_numeric(match: re.Match[str]) -> str:
+        claimed = int(next(group for group in match.groups() if group is not None))
+        if claimed in allowed:
+            return f"초등 {claimed}학년"
+        return f"초등 {selected}학년" if selected is not None else "초등학생"
+
+    text = numeric_grade_re.sub(replace_numeric, value)
+
+    def replace_band(match: re.Match[str]) -> str:
+        band = match.group(1)
+        band_grades = {1, 2, 3} if band == "저" else {4, 5, 6}
+        if allowed and band_grades.intersection(allowed):
+            return f"초등 {band}학년"
+        return f"초등 {selected}학년" if selected is not None else "초등학생"
+
+    return re.sub(r"초등\s*(저|고)학년", replace_band, text)
+
+
 def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) -> str:
     """Remove authoring instructions while keeping the supplied facts intact."""
     text = normalize(value)
@@ -541,6 +632,36 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
         re.escape(focus)
         + r"(?:은|는)\s+학원\s+운영이나\s+학습\s+관리에서\s+살펴볼\s+수\s+있는\s+보조\s+단서입니다\.?",
         stable_choice(f"{seed}|focus-explanation", focus_explanations),
+        text,
+    )
+    text = re.sub(
+        re.escape(focus) + r"(?:이라는|라는)\s+참고어가\s+어떤\s+영역을\s+가리키든,?",
+        f"{korean_josa(focus, '이/가')} 어떤 학습 상태를 가리키는지 살핀 뒤,",
+        text,
+    )
+    text = text.replace(
+        "수업 운영 방식과 참여도 관리와 연결해 보면",
+        "수업 방식과 학습 참여 흐름을 함께 보면",
+    )
+    text = text.replace(
+        "수업 운영 방식과 참여도 관리를 설명하는 보조 단서로 보고",
+        "학생의 참여와 복습 흐름을 확인하는 기준으로 삼고",
+    )
+    text = re.sub(
+        r"영어\s+수학\s+(?:확인\s*항목|관련\s*정보|확인\s*기준)(?:을|를)?\s+참고해",
+        "영어 학습 흐름을 함께 살펴",
+        text,
+    )
+    text = text.replace("영어 수학", "영어·수학")
+    text = re.sub(
+        r"영어·수학\s+확인\s*항목(?:을|를)?\s+참고해",
+        "영어·수학 학습 시간을 함께 살펴",
+        text,
+    )
+    text = re.sub(
+        re.escape(focus)
+        + r"(?:은|는)\s+검색\s+유입을\s+위한\s+단어로만\s+쓰기보다\s+[^.!?]*실제로\s+확인할\s+질문으로\s+바꾸는\s+것이\s+좋습니다\.?",
+        f"{korean_josa(focus, '은/는')} 학생의 현재 상태와 다음 복습 순서를 확인하는 학습 기준으로 활용하는 것이 좋습니다.",
         text,
     )
 
@@ -618,6 +739,9 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
         ("후기 예시", "상담 상황"),
         ("검색자가", "학부모가"),
         ("검색자", "학부모"),
+        ("이번 원고에서는", "이 안내에서는"),
+        ("이번 원고는", "이 안내는"),
+        ("이번 원고", "이 안내"),
         ("이 원고에서는", "이 안내에서는"),
         ("이 원고는", "이 안내는"),
         ("원고에서는", "안내에서는"),
@@ -643,6 +767,17 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
         f"{context['title']} 선택 기준을 안내합니다",
     )
     text = text.replace("원고", "안내").replace("키워드", "확인 항목")
+    text = text.replace("참고 확인 항목로", "학습 상담의 보조 기준으로")
+    text = text.replace("확인 항목를", "확인 항목을")
+    text = text.replace("참고어", "학습 참고 항목")
+    text = text.replace(
+        "학부모의 질문에 직접 답하는 지역 교육 안내문으로 활용할 수 있습니다",
+        "학부모가 수업 기준을 구체적으로 판단할 수 있도록 정리했습니다",
+    )
+    text = text.replace(
+        "지역 교육 안내문으로 활용할 수 있습니다",
+        "학부모가 수업 기준을 판단할 수 있도록 정리했습니다",
+    )
     text = re.sub(r"‘([^’]+)’\s*(?:확인 기준|관리 방식|운영 항목)\s*(?:체크|점검)\s*기준", r"‘\1’ 점검 기준", text)
     text = re.sub(r"(관련 정보|확인 기준|운영 방식)\s+항목", r"\1", text)
     text = re.sub(r"(확인 기준|관리 방식|운영 항목)\s+관점", r"\1의 관점", text)
@@ -652,6 +787,21 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
     text = text.replace("구조화 데이터", "핵심 안내")
     text = text.replace("설명문으로 요약하기 좋습니다", "상담 전에 핵심을 확인할 수 있도록 정리했습니다")
     text = text.replace("학원주소", "학원 주소").replace("수업학교", "수업 학교")
+    text = text.replace("제공 학교 정보", "확인된 학교 정보")
+    text = text.replace("제공된 학교 범위", "확인된 학교 자료 범위")
+    text = text.replace("실제 확인할 운영·학습 항목", "실제 확인할 학습·상담 항목")
+    text = text.replace("정보성 페이지로서 가치가 있습니다", "학생의 현재 상태와 관리 방식을 구체적으로 설명할 수 있어야 합니다")
+    text = text.replace("해당 확인 항목보다 수학 풀이가", "표현보다 수학 풀이가")
+    text = text.replace("초등학생 영어 학교 정보", "초등 영어 관련 학교 정보")
+    text = text.replace("초등학생 수학 학교 정보", "초등 수학 관련 학교 정보")
+    text = re.sub(r"해당\s+초등학생\s+(영어|수학)\s+상담\s+선택\s*시", r"초등 \1 수업을 선택할 때", text)
+    text = re.sub(r"해당\s+초등학생\s+(영어|수학)\s+상담", r"초등 \1 상담", text)
+    text = re.sub(r"이\s+(영어|수학)\s+관리\s+기준\s+상담\s+전에는", r"\1 학습 상담 전에는", text)
+    text = re.sub(
+        r"검색\s+확인\s*항목이\s+말해\s+주는\s+추가\s+상담\s+포인트",
+        f"{context['locality']} 상담에서 확인할 {context['subject']} 학습 포인트",
+        text,
+    )
     text = text.replace("등록 주소", "센터 주소")
     text = text.replace("등 제공 학교 진도", "등 확인된 학교 자료")
     text = text.replace("안내하는 안내입니다", "설명하는 자료입니다")
@@ -717,6 +867,7 @@ def naturalize_text(value: str, context: dict[str, object], seed_suffix: str) ->
         "상담 전에 핵심을 확인할 수 있도록 정리했습니다",
     )
     text = enforce_verified_school_claims(text, context, seed_suffix)
+    text = enforce_verified_grade_claims(text, context)
     return normalize(repair_named_josa(text, context))
 
 
@@ -725,7 +876,11 @@ def select_student_situation(
 ) -> str:
     source = " ".join([intro] + [paragraph for _, paragraphs in body_sections for paragraph in paragraphs])
     sentences = [normalize(item) for item in re.split(r"(?<=[.!?])\s+", source) if normalize(item)]
-    signals = ("학생", "중1", "중2", "중3", "고1", "고2", "고3", "예비", "오답", "시험", "단원", "문법", "독해", "서술형")
+    signals = (
+        "학생", "초1", "초2", "초3", "초4", "초5", "초6",
+        "중1", "중2", "중3", "고1", "고2", "고3", "예비",
+        "오답", "시험", "단원", "문법", "독해", "서술형", "연산", "문장제", "파닉스",
+    )
     candidates = [
         sentence for sentence in sentences
         if 45 <= len(sentence) <= 260 and sum(signal in sentence for signal in signals) >= 2
@@ -767,9 +922,9 @@ def factual_context_paragraphs(
         facts.append(stable_choice(
             f"{seed}|grade-fact",
             [
-                f"자료에 기재된 {subject} 수업 가능 학년은 {grades}입니다. 학생의 현재 학년과 필요한 보강 범위는 상담에서 구체적으로 확인할 수 있습니다.",
-                f"학년 정보는 자료상 {grades}로 확인됩니다. 같은 학년이라도 현재 단원과 오답 유형을 확인한 뒤 학습 순서를 정하는 것이 필요합니다.",
-                f"{center}의 센터 자료에는 {subject} 가능 학년이 {grades}로 표시되어 있습니다. 상담 전 현재 교재와 최근 시험지를 준비하면 출발점을 더 분명히 정할 수 있습니다.",
+                f"센터 자료에 기재된 {subject} 전체 수업 가능 학년은 {grades}입니다. 학생의 현재 학년과 필요한 보강 범위는 상담에서 구체적으로 확인할 수 있습니다.",
+                f"센터 전체 학년 정보는 자료상 {grades}로 확인됩니다. 같은 학년이라도 현재 단원과 오답 유형을 확인한 뒤 학습 순서를 정하는 것이 필요합니다.",
+                f"{center}의 센터 자료에는 {subject} 전체 가능 학년이 {grades}로 표시되어 있습니다. 상담 전 현재 교재와 최근 학습 자료를 준비하면 출발점을 더 분명히 정할 수 있습니다.",
             ],
         ))
     if situation:
@@ -842,6 +997,32 @@ def final_polish_text(value: str) -> str:
     text = re.sub(r"((?:체계적|집중)?학습관리)\s*은", r"\1는", text)
     text = re.sub(r"((?:체계적|집중)?학습관리)\s*을", r"\1를", text)
     text = text.replace("상담 상황로", "상담 상황으로")
+    text = text.replace("영어·수학 확인 항목을 참고해", "영어·수학 학습 시간을 함께 살펴")
+    text = text.replace("이 영어 관리 기준 상담 전", "영어 학습 상담 전")
+    text = text.replace("이 수학 관리 기준 상담 전", "수학 학습 상담 전")
+    text = text.replace("검색 확인 항목이 말해 주는 추가 상담 포인트", "학습 기록으로 살펴보는 추가 상담 포인트")
+    text = text.replace("함께 검색한 경우에도", "함께 살펴볼 때도")
+    text = text.replace("초등학생 학생", "초등학생")
+    text = text.replace("초등학생으로 넘어가며", "초등 고학년으로 올라가며")
+    text = text.replace("재확인 확인 항목", "재확인 항목")
+    text = text.replace("재확인 확인", "재확인")
+    text = text.replace("학습 기준 선택 기준이", "학습 기준이")
+    text = text.replace("주간 학습 복습", "주간 복습")
+    text = text.replace("상담 수업", "수업")
+    text = text.replace("이 수학 관리 기준 수업 후", "수학 수업 후")
+    text = text.replace("제공된 학교", "센터 안내에 기재된 학교")
+    text = text.replace("정보성 페이지로 구성했습니다", "학습 기준을 구체적으로 정리했습니다")
+    text = text.replace(" 페이지라면 그 표현이", " 안내를 볼 때는 해당 내용이")
+    text = re.sub(
+        r"적용하면\s+(.+?)이라는\s+검색어도\s+실제로는\s+빈틈을\s+찾고\s+복습\s+순서를\s+잡는\s+질문으로\s+바꿀\s+수\s+있습니다\.",
+        r"적용하면 \1을 살필 때 학습 빈틈과 복습 순서를 더 구체적으로 정할 수 있습니다.",
+        text,
+    )
+    text = re.sub(
+        r"이 안내는 (초등\s+\d+학년) 중 (.+?학생)으로, (.+?흐름)을 통해 (.+?학생)을 기준으로 (초등\s+\d+학년 영어 진단.+)$",
+        r"이 안내는 \1 가운데 \2을 중심으로 살펴봅니다. \3이 이어진다면 \4인지도 함께 확인하며, \5",
+        text,
+    )
     for wrong, correct in (
         ("문장제을", "문장제를"),
         ("자료 해석 문제을", "자료 해석 문제를"),
@@ -850,10 +1031,41 @@ def final_polish_text(value: str) -> str:
         ("유리수와 순환소수을", "유리수와 순환소수를"),
         ("와와학습코칭학원로", "와와학습코칭학원으로"),
         ("와와학습코칭학원와", "와와학습코칭학원과"),
+        ("루틴를", "루틴을"),
+        ("복습와", "복습과"),
+        ("예습를", "예습을"),
+        ("확인 항목를", "확인 항목을"),
+        ("참고 확인 항목로", "학습 상담의 보조 기준으로"),
     ):
         text = text.replace(wrong, correct)
     text = re.sub(r"상담 상황\s+(\d+)\.\s*상담 상황\s+\1\s*[.｜:]\s*", r"상담 상황 \1. ", text)
     text = re.sub(r"항목(?=중심|관련|기준|관점)", "항목 ", text)
+    common_nouns = (
+        "학습력검사", "체계적 학습 관리", "집중 학습 관리", "학습 관리",
+        "성향검사", "습관검사", "유형검사", "동기검사", "체크리스트",
+        "동기부여", "포트폴리오", "우선순위", "완성도", "성취도", "진척도",
+        "문장제 해석", "자료 해석", "확인 항목", "보고서", "설명회", "리포트",
+        "플래너", "매니저", "클리닉", "세미나", "단원", "관리", "습관",
+        "해석", "보완", "유형", "후기", "캠프", "검사", "평가", "대비",
+        "준비", "설계", "사례", "숙제", "결과", "상담", "몰입도", "자립도",
+        "이해", "강의", "심화", "태도검사", "격려", "일지", "진도", "성과",
+        "통계", "수업", "노트", "과제", "위치", "주차", "정보", "정예",
+        "강사", "암기", "성적", "태도", "지도", "목표", "동기", "개념", "기록", "표",
+    )
+    for noun in sorted(common_nouns, key=len, reverse=True):
+        for pair, forms in {
+            "은/는": ("은", "는"),
+            "을/를": ("을", "를"),
+            "과/와": ("과", "와"),
+        }.items():
+            text = re.sub(
+                re.escape(noun) + "(?:" + "|".join(forms) + r")(?=\s|[,.;:!?]|$)",
+                lambda _match, word=noun, particle_pair=pair: korean_josa(word, particle_pair),
+                text,
+            )
+    text = text.replace("학습 시간 표", "학습 시간표").replace("학원 시간 표", "학원 시간표")
+    for wrong, correct in (("표을", "표를"), ("표은", "표는"), ("반를", "반을"), ("자을", "자를")):
+        text = text.replace(wrong, correct)
     return normalize(text)
 
 
@@ -918,17 +1130,29 @@ def individualize_body(
     ]
 
     category = str(context["category"])
-    intensive_categories = {"중학생수학학원", "중학생영어학원", "고등학생영어학원"}
-    if category in intensive_categories and len(natural_sections) == 6:
-        # Keep the opening/closing intent but use one of up to 24 meaningful middle
-        # orders, derived from each locality's actual headings and facts.
-        middle = list(range(1, 5))
+    intensive_categories = {
+        "초등학생수학학원", "초등학생영어학원",
+        "중학생수학학원", "중학생영어학원", "고등학생영어학원",
+    }
+    if category in intensive_categories and len(natural_sections) in {5, 6, 7}:
+        # Keep the opening/closing intent while rotating the meaningful middle
+        # sections from each locality's actual headings and facts.
+        middle = list(range(1, len(natural_sections) - 1))
         middle.sort(key=lambda index: hashlib.sha256(
             f"{context['seed']}|section-order|{natural_sections[index][0]}".encode("utf-8")
         ).hexdigest())
-        natural_sections = [natural_sections[index] for index in [0, *middle, 5]]
+        natural_sections = [
+            natural_sections[index]
+            for index in [0, *middle, len(natural_sections) - 1]
+        ]
 
-    fact_limit = {"중학생수학학원": 4, "중학생영어학원": 3, "고등학생영어학원": 3}.get(category, 1)
+    fact_limit = {
+        "초등학생수학학원": 4,
+        "초등학생영어학원": 3,
+        "중학생수학학원": 4,
+        "중학생영어학원": 3,
+        "고등학생영어학원": 3,
+    }.get(category, 1)
     facts = factual_context_paragraphs(context, situation)[:fact_limit]
     if natural_sections:
         slot_order = list(range(len(natural_sections)))
@@ -940,7 +1164,7 @@ def individualize_body(
             heading, paragraphs = natural_sections[slot]
             natural_sections[slot] = (heading, [fact, *paragraphs])
 
-    keep = 3 if category == "중학생수학학원" else 4
+    keep = 3 if category in {"초등학생수학학원", "중학생수학학원"} else 4
     varied_intro, varied_sections = diversify_title_references(
         natural_intro, natural_sections, context, keep
     )
@@ -966,6 +1190,7 @@ def naturalize_cases(cases: list[str], context: dict[str, object]) -> list[str]:
             (sentences[0].startswith("아래는 ") and "예시입니다" in sentences[0])
             or ("정리한 예시입니다" in sentences[0] and "상담" in sentences[0])
             or ("실제 특정 학생의 결과를 단정하지 않고" in sentences[0] and "상담 상황" in sentences[0])
+            or ("설정의 문장입니다" in sentences[0])
         ):
             sentences.pop(0)
         value = " ".join(sentences) or value
@@ -975,8 +1200,59 @@ def naturalize_cases(cases: list[str], context: dict[str, object]) -> list[str]:
             "",
             value,
         )
+        value = re.sub(
+            rf"^{re.escape(str(context['locality']))}\s+학부모\s+상담\s+상황\s*(?:[.｜:·-]\s*)+",
+            "",
+            value,
+        )
+        value = re.sub(r"^또\s+다른\s+상담\s+상황\s*(?:[.｜:·-]\s*)+", "", value)
+        value = re.sub(r"^[^.!?]*설정의\s+문장입니다\.\s*", "", value)
+        value = re.sub(
+            rf"(?<=[.!?])\s+{re.escape(str(context['locality']))}\s*$",
+            "",
+            value,
+        )
         natural_cases.append(f"상담 상황 {index}. {dedupe_text_sentences(value)}")
     return natural_cases
+
+
+def individualize_faq_items(
+    faq: list[tuple[str, str]], context: dict[str, object],
+) -> list[tuple[str, str]]:
+    """Give highly repeated elementary FAQ prompts a local learning intent."""
+    if str(context.get("category")) != "초등학생수학학원" or len(faq) < 4:
+        return faq
+
+    locality = str(context["locality"])
+    focus = str(context["learning_focus"])
+    questions = list(faq)
+    questions[2] = (
+        stable_choice(
+            f"{context['seed']}|elementary-math-school-faq",
+            [
+                f"{locality} 초등 수학 상담에서 학교 진도는 어떻게 확인하나요?",
+                f"{locality} 학생의 학교 일정은 수업 계획에 어떻게 반영하나요?",
+                f"{locality} 초등학생 수학학원은 학교 자료를 어떻게 확인하나요?",
+            ],
+        ),
+        questions[2][1],
+    )
+    homework_answer = questions[3][1]
+    extra = f"{korean_josa(focus, '이/가')} 다음 복습에 반영되는지도 함께 살펴보는 것이 좋습니다."
+    if focus not in homework_answer:
+        homework_answer = dedupe_text_sentences(f"{homework_answer} {extra}")
+    questions[3] = (
+        stable_choice(
+            f"{context['seed']}|elementary-math-homework-faq",
+            [
+                f"{locality} 초등 수학 숙제는 어느 정도가 적당한가요?",
+                f"{locality} 학생에게 문제 양보다 중요한 숙제 기준은 무엇인가요?",
+                f"{locality} 초등학생 수학학원에서 오답 숙제는 어떻게 확인하나요?",
+            ],
+        ),
+        homework_answer,
+    )
+    return questions
 
 
 def compact_meta(original: str, title: str, row: dict[str, str], config: dict[str, str]) -> str:
@@ -1296,9 +1572,17 @@ def detail_page(
         )
         for index, (question, answer) in enumerate(parse_faq(sections["FAQ"]), 1)
     ]
+    faq = individualize_faq_items(faq, context)
+    # Individualization may append a newly composed sentence after the first
+    # polish pass.  Run the same public-copy cleanup once more so generated
+    # FAQ text and its JSON-LD counterpart stay natural and identical.
+    faq = [
+        (final_polish_text(question), dedupe_text_sentences(final_polish_text(answer)))
+        for question, answer in faq
+    ]
     cases = naturalize_cases(parse_cases(sections["학부모후기"]), context)
     summary = dedupe_text_sentences(final_polish_text(naturalize_text(sections["JSON-LD 요약"], context, "summary")))
-    if len(faq) not in {4, 5} or len(body_sections) not in {5, 6}:
+    if len(faq) not in {4, 5} or len(body_sections) not in {5, 6, 7}:
         raise ValueError(f"Unexpected content shape: {title}: body={len(body_sections)} faq={len(faq)}")
     canonical = absolute_url("과목별학원", config["slug"], slug)
     representative_url = representative_image_url(canonical)
@@ -1372,7 +1656,7 @@ def detail_page(
         <div class="academy-fact-grid">
           <div class="academy-fact-card"><strong>센터</strong><span>{esc(row.get('센터명'))}</span></div>
           <div class="academy-fact-card"><strong>주소</strong><span>{esc(row.get('센터 주소'))}</span></div>
-          <div class="academy-fact-card"><strong>수업 가능 학년</strong><span>{esc(grades)}</span></div>
+          <div class="academy-fact-card"><strong>센터 전체 수업 가능 학년</strong><span>{esc(grades)}</span></div>
           <div class="academy-fact-card"><strong>교육지원청 등록 정보</strong><span>{esc(identifier)}</span></div>
         </div>
         {('<div class="academy-school-tags" aria-label="제공 자료에 포함된 수업 학교">' + school_tags + '</div>') if school_tags else ''}
@@ -1453,7 +1737,7 @@ def category_hub(rows: list[dict[str, str]], config: dict[str, str]) -> str:
 def subject_hub() -> str:
     canonical = absolute_url("과목별학원")
     title = f"과목별학원 | {SITE_NAME}"
-    description = "중학생과 고등학생 영어·수학의 지역별 학습 안내를 학년과 과목, 학생 상황에 따라 찾아볼 수 있도록 정리했습니다."
+    description = "초등학생부터 고등학생까지 영어·수학의 지역별 학습 안내를 학년과 과목, 학생 상황에 따라 찾아볼 수 있도록 정리했습니다."
     items = [
         {"@type": "ListItem", "position": index, "name": config["label"], "url": absolute_url("과목별학원", config["slug"])}
         for index, config in enumerate(CATEGORIES, 1)
@@ -1469,9 +1753,9 @@ def subject_hub() -> str:
     )
     head = page_head(title=title, description=description, canonical=canonical, asset_prefix="../", image_url=SHARE_IMAGE_URL, graph=graph, page_type="website")
     return f'''<!doctype html><html lang="ko">{head}<body class="general-page subject-page academy-page">{site_header("subjects")}<main id="main">
-      <header class="academy-hero reveal"><div class="academy-hero-copy"><nav class="academy-breadcrumb" aria-label="현재 위치"><a href="/">홈</a><span>›</span><span aria-current="page">과목별학원</span></nav><p class="eyebrow">Subject &amp; Grade Academy Guide</p><h1>과목과 학년을 먼저 고르고,<br>동네별 안내를 확인하세요.</h1><p class="lead">중등·고등 영어와 수학은 현재 단원, 학교 자료, 오답 유형에 따라 확인할 관리 기준이 달라집니다. 필요한 카테고리를 선택하면 371개 동네별 학습 안내와 확인된 센터 정보를 살펴볼 수 있습니다.</p></div><aside class="academy-hero-aside"><strong>{len(CATEGORIES)} × 371</strong><span>{len(CATEGORIES)}개 카테고리 · {len(CATEGORIES) * 371:,}개 지역별 학습 안내</span></aside></header>
+      <header class="academy-hero reveal"><div class="academy-hero-copy"><nav class="academy-breadcrumb" aria-label="현재 위치"><a href="/">홈</a><span>›</span><span aria-current="page">과목별학원</span></nav><p class="eyebrow">Subject &amp; Grade Academy Guide</p><h1>과목과 학년을 먼저 고르고,<br>동네별 안내를 확인하세요.</h1><p class="lead">초등·중등·고등 영어와 수학은 현재 단원, 학교 자료, 오답 유형에 따라 확인할 관리 기준이 달라집니다. 필요한 카테고리를 선택하면 371개 동네별 학습 안내와 확인된 센터 정보를 살펴볼 수 있습니다.</p></div><aside class="academy-hero-aside"><strong>{len(CATEGORIES)} × 371</strong><span>{len(CATEGORIES)}개 카테고리 · {len(CATEGORIES) * 371:,}개 지역별 학습 안내</span></aside></header>
       <section class="section"><div class="section-head reveal"><p class="eyebrow blue">Choose A Learning Track</p><h2>현재 학년과 과목에 맞는 안내</h2><p class="lead">학년과 과목별로 확인할 기준을 나누고, 동네 페이지는 지역별 학습 안내와 확인된 센터 자료를 기반으로 구성했습니다.</p></div><div class="academy-category-grid">{cards}</div></section>
-      <section class="process-band"><div class="section"><div class="process-intro reveal"><p class="eyebrow">How To Use</p><h2>페이지를 확인하는 순서</h2><p class="lead">광고 문구보다 학생에게 적용할 수 있는 정보가 있는지 차례로 확인하세요.</p></div><div class="process-list"><article class="process-item reveal"><div><h3>학년·과목 선택</h3><p>중학생과 고등학생 가운데 현재 학년을 고른 뒤 영어와 수학 중 우선 관리가 필요한 과목을 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>동네·센터 정보 확인</h3><p>지역 검색을 사용해 주소, 수업 가능 학년, 학교와 교습비 안내 자료를 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>학습 안내와 FAQ 비교</h3><p>학생 상황, 학교 학습, 과제·오답 관리 기준과 상담 질문을 읽어봅니다.</p></div></article><article class="process-item reveal"><div><h3>상담 전 우선순위 정리</h3><p>최근 학습 결과와 어려운 단원을 준비해 먼저 해결할 문제를 정합니다.</p></div></article></div></div></section>
+      <section class="process-band"><div class="section"><div class="process-intro reveal"><p class="eyebrow">How To Use</p><h2>페이지를 확인하는 순서</h2><p class="lead">광고 문구보다 학생에게 적용할 수 있는 정보가 있는지 차례로 확인하세요.</p></div><div class="process-list"><article class="process-item reveal"><div><h3>학년·과목 선택</h3><p>초등학생·중학생·고등학생 가운데 현재 학년을 고른 뒤 영어와 수학 중 우선 관리가 필요한 과목을 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>동네·센터 정보 확인</h3><p>지역 검색을 사용해 주소, 센터 전체 수업 가능 학년, 학교와 교습비 안내 자료를 확인합니다.</p></div></article><article class="process-item reveal"><div><h3>학습 안내와 FAQ 비교</h3><p>학생 상황, 학교 학습, 과제·오답 관리 기준과 상담 질문을 읽어봅니다.</p></div></article><article class="process-item reveal"><div><h3>상담 전 우선순위 정리</h3><p>최근 학습 결과와 어려운 단원을 준비해 먼저 해결할 문제를 정합니다.</p></div></article></div></div></section>
       <section class="cta-section"><div class="cta-panel shell reveal"><p class="eyebrow">Start With The Student</p><h2>카테고리를 고른 뒤에는 학생의 현재 기록을 함께 보세요.</h2><p class="lead">같은 동네와 학년이어도 필요한 수업 순서는 다를 수 있습니다. 최근 자료를 기준으로 상담의 첫 질문을 정리해보세요.</p><div class="actions"><a class="btn btn-primary" href="/상담문의/">상담 준비하기</a><a class="btn btn-blue" href="/학습가이드/">학습가이드 보기</a></div></div></section>
     </main>{site_footer()}<script src="../assets/subject-directory.js" defer></script></body></html>'''
 
