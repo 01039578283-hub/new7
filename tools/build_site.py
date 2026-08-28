@@ -13,6 +13,7 @@ BUILD_STEPS = (
     "generate_subject_pages.py",
     "update_subject_navigation.py",
     "finalize_site.py",
+    "add_subject_anchor_tocs.py",
     "generate_sitemap.py",
     "generate_rss.py",
 )

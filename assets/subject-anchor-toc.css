@@ -1,0 +1,143 @@
+/* Page-specific anchor navigation for subject academy detail pages. */
+.subject-page-toc {
+  min-width: 0;
+}
+
+.subject-page-toc-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, .3fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--subject-line);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7f9fc, #ffffff);
+  box-shadow: 0 10px 34px rgba(15, 31, 53, .05);
+}
+
+.subject-page-toc-heading .eyebrow {
+  margin: 0 0 8px;
+}
+
+.subject-page-toc-heading strong {
+  display: block;
+  color: var(--subject-ink);
+  font-size: 1.28rem;
+  line-height: 1.4;
+  letter-spacing: -.035em;
+}
+
+.subject-page-toc-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subject-page-toc-list a {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 13px;
+  border: 1px solid var(--subject-line);
+  border-radius: 10px;
+  color: #31526d;
+  background: #ffffff;
+  font-size: .88rem;
+  font-weight: 850;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+
+.subject-page-toc-list a:hover {
+  border-color: var(--subject-blue);
+  color: var(--subject-blue-dark, #1b43aa);
+  background: var(--subject-blue-soft);
+}
+
+.subject-page-toc-list a:focus-visible {
+  border-color: var(--subject-blue);
+  outline: 3px solid rgba(47, 126, 232, .25);
+  outline-offset: 2px;
+  color: var(--subject-blue-dark, #1b43aa);
+  background: var(--subject-blue-soft);
+}
+
+.subject-page-toc-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--subject-blue);
+  font-size: .68rem;
+  font-weight: 950;
+}
+
+#summary-title,
+#facts-title,
+#article-title,
+#faq-title,
+#case-title,
+#related-title {
+  scroll-margin-top: 108px;
+}
+
+#summary-title:target,
+#facts-title:target,
+#article-title:target,
+#faq-title:target,
+#case-title:target,
+#related-title:target {
+  color: var(--subject-blue-dark, #1b43aa);
+}
+
+@media (max-width: 900px) {
+  .subject-page-toc-panel {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  #summary-title,
+  #facts-title,
+  #article-title,
+  #faq-title,
+  #case-title,
+  #related-title {
+    scroll-margin-top: 148px;
+  }
+}
+
+@media (max-width: 620px) {
+  .subject-page-toc-panel {
+    padding: 20px 16px;
+    border-radius: 14px;
+  }
+
+  .subject-page-toc-heading strong {
+    font-size: 1.18rem;
+  }
+
+  .subject-page-toc-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .subject-page-toc-list a {
+    min-height: 56px;
+    padding: 10px 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subject-page-toc-list a {
+    transition: none;
+  }
+}
