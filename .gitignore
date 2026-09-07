@@ -6,4 +6,10 @@ __pycache__
 .DS_Store
 Thumbs.db
 
+# Keep only the reproducible title audit and local verification in Git.
+!tools/reports/
+tools/reports/*
+!tools/reports/title-suffix-audit.json
+!tools/reports/title-suffix-local-verification.json
+
 .vercel
