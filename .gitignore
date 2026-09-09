@@ -4,6 +4,8 @@ node_modules
 __pycache__
 *.pyc
 .DS_Store
+.env*
+tools/reports/hub-enrichment/
 Thumbs.db
 
 # Keep only the reproducible title audit and local verification in Git.
