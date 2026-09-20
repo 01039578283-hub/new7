@@ -19,5 +19,7 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "node wawa-analytics-build.mjs wawa-08 .",
+  "outputDirectory": "."
 }
