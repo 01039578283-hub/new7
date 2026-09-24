@@ -1,0 +1,29 @@
+/* Existing branch descendants only; no image cropping or new JavaScript. */
+.br-refined .br-related-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.br-refined .br-related-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;min-height:48px;padding:18px;border:1px solid #c9d5df;border-radius:14px;background:#fff;color:#143d51;text-decoration:none;line-height:1.65;text-align:left;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.br-refined .br-related-card:hover{background:#edf6f5;border-color:#59877f}
+.br-refined .br-related-card:focus-visible{outline:3px solid #087c81;outline-offset:3px}
+.br-refined .br-related-card strong{font-size:16px;line-height:1.6}
+.br-refined .br-link-topic{display:block;color:#244e57;font-size:14px;font-weight:500}
+.br-refined .br-link-scope{display:block;color:#465b68;font-size:14px;font-weight:400}
+.br-refined .br-practice{padding-left:1.6em;margin:18px 0;line-height:1.9}
+.br-refined .br-practice li{padding-left:.3em;margin:12px 0}
+.br-refined .br-practice li::marker{color:#086861;font-weight:700}
+.br-refined .br-readiness{padding-top:24px;margin-top:24px;border-top:1px solid #c9d5df}
+.br-refined .br-readiness h4{font-size:17px;line-height:1.65;margin:0 0 12px}
+.br-refined #neighborhood-pages .mg-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.br-refined .mg-toc a{min-height:44px;display:inline-flex;align-items:center;line-height:1.55;white-space:normal}
+@media(max-width:900px){.br-refined .br-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .br-refined .br-related-grid,.br-refined #neighborhood-pages .mg-links{grid-template-columns:minmax(0,1fr);gap:12px}
+ .br-refined .br-related-card{padding:16px}
+ .br-refined .mg-main p,.br-refined .mg-main dd,.br-refined .br-practice{font-size:16px;line-height:1.85;word-break:keep-all;overflow-wrap:anywhere}
+ .br-refined .mg-main .mg-kicker{font-size:12px;line-height:1.65;letter-spacing:.08em}
+ .br-refined .mg-main .mg-updated{font-size:13px}
+ .br-refined .mg-lead{font-size:17px!important;line-height:1.8!important}
+ .br-refined .mg-main h1{font-size:clamp(27px,7.5vw,34px);line-height:1.45;word-break:keep-all;overflow-wrap:anywhere}
+ .br-refined .mg-main h2{font-size:23px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+ .br-refined .mg-main h3{font-size:19px;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere}
+ .br-refined .mg-faq summary{min-height:48px;font-size:16px;line-height:1.7;padding-top:14px;padding-bottom:14px}
+ .br-refined .mg-grid,.br-refined .mg-card,.br-refined .bs-action div{min-width:0}
+}

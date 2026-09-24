@@ -14,4 +14,9 @@ tools/reports/*
 !tools/reports/title-suffix-audit.json
 !tools/reports/title-suffix-local-verification.json
 
+# Public builds are reproducible; local authoring data is not part of a release.
+.public-release/
+tools/data/
+tmp/
+
 .vercel

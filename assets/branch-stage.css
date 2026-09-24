@@ -1,0 +1,14 @@
+/* Branch learning guides inherit the site-wide shell and full-size media. */
+.bs-article{max-width:850px;margin-left:auto;margin-right:auto}
+.bs-article h3{font-size:21px;margin-bottom:15px}
+.bs-learning-block{margin-top:28px;padding-top:26px;border-top:1px solid #d4e3ed}
+.bs-observations{background:#fff;padding:24px;border:1px solid #d4e3ed;border-radius:18px;margin:24px 0}
+.bs-action{margin:22px 0 0;display:grid;gap:12px}
+.bs-action>div{padding:18px 22px;border-radius:14px;background:#eaf4fa}
+.bs-action dt{font-weight:800;color:#175e82;font-size:15px;margin-bottom:8px}
+.bs-action dd{margin:0;font-size:16px;line-height:1.85;word-break:keep-all;overflow-wrap:anywhere}
+.bs-child-links{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.bs-child-links a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:12px 14px;border:1px solid #bed8e6;border-radius:11px;text-decoration:none!important;line-height:1.6;font-size:15px;font-weight:700;word-break:keep-all;overflow-wrap:anywhere}
+.bs-child-links a:hover{background:#edf7fb}.bs-child-links a:focus-visible{outline:3px solid #dd8f2d;outline-offset:3px}
+.bs-center-answer p+p{margin-top:8px}.bs-stage-columns h3{font-size:20px}
+@media(max-width:600px){.bs-article h3{font-size:19px}.bs-observations{padding:19px}.bs-action>div{padding:17px}.bs-learning-block{margin-top:23px;padding-top:22px}.bs-child-links a{font-size:15px}}
