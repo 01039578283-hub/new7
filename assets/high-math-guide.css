@@ -1,0 +1,51 @@
+/* Facts and study preparation for the existing high-school math routes. */
+.nm-math-page .nm-panel,.nm-math-page .nm-guide-article{box-sizing:border-box;margin:24px auto;padding:28px;border:1px solid #d4e3ed;border-radius:18px;background:#fff;color:#24384a;max-width:1092px;min-width:0}
+.nm-math-page .nm-panel *{box-sizing:border-box}
+.nm-math-page .nm-enrollment{border-top:4px solid #175e82}
+.nm-math-page .nm-panel h2{margin:0 0 18px;font-size:clamp(22px,3vw,28px);line-height:1.45;color:#17324d;letter-spacing:-.03em;overflow-wrap:anywhere;word-break:keep-all}
+.nm-math-page .nm-panel p,.nm-math-page .nm-panel li{font-size:16px;line-height:1.8;word-break:keep-all;overflow-wrap:anywhere}
+.nm-math-page .nm-eyebrow{font-size:12px!important;font-weight:800;color:#175e82;margin:0 0 8px}
+.nm-math-page .nm-facts{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px;margin:0 0 18px}
+.nm-math-page .nm-facts>div{min-width:0}.nm-math-page .nm-facts .nm-wide{grid-column:1/-1}
+.nm-math-page .nm-facts dt{font-size:13px;font-weight:750;color:#587084;margin-bottom:5px}
+.nm-math-page .nm-facts dd{margin:0;font-size:18px;font-weight:700;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.nm-math-page .nm-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;min-width:0}
+.nm-math-page .nm-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;max-width:100%;padding:11px 16px;border:1px solid #bdd5e4;border-radius:10px;background:#fff;color:#164f6e;text-decoration:none;font-size:15px;font-weight:750;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere}
+.nm-math-page .nm-actions a:first-child{background:#175e82;color:#fff;border-color:#175e82}
+.nm-math-page .nm-actions a:hover{background:#eaf4fa;color:#17324d}
+.nm-math-page .nm-actions a:focus-visible,.nm-math-page .nm-faq summary:focus-visible{outline:3px solid #d78b26;outline-offset:3px}
+.nm-math-page .nm-help{font-size:14px!important;color:#526b7b;line-height:1.75;margin:12px 0 0}
+.nm-math-page .nm-conditions{padding:12px 16px;background:#edf5fb;border-left:3px solid #579fbe;border-radius:0 8px 8px 0}
+.nm-math-page .nm-location{margin-top:22px;padding-top:22px;border-top:1px solid #d4e3ed}
+.nm-math-page .nm-checklist{padding-left:24px;line-height:1.85}.nm-math-page .nm-checklist li+li{margin-top:9px}
+.nm-math-page .nm-faq{border-top:1px solid #d4e3ed;padding:0 2px}
+.nm-math-page .nm-faq summary{cursor:pointer;padding:17px 0;font-size:16px;font-weight:750;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere}
+.nm-math-page .nm-faq p{margin:0 0 18px}
+.nm-math-page [id]{scroll-margin-top:110px}
+.nm-math-page .nm-guide-article{max-width:none}.nm-math-page .nm-guide-article h3{line-height:1.5}
+.nm-math-page .nm-guide-article .br-practice{padding-left:24px;line-height:1.85}
+.nm-math-page .nm-guide-article .bs-learning-block{margin-top:24px;padding-top:22px}
+.nm-math-page .mg-hero{padding-bottom:14px}
+.nm-math-page.subject-page .academy-content-wrap{margin-top:24px}
+.nm-math-page.subject-page .nm-compact-hero{grid-template-columns:minmax(0,1fr)}
+.nm-math-page.subject-page main>.nm-enrollment{width:calc(100% - 48px);max-width:1120px}
+.nm-math-page .academy-media-section{margin-top:32px}
+.nm-math-page #hub-directory{margin-top:20px}
+@media(max-width:600px){
+  .nm-math-page .mg-hero{padding-top:30px}
+  .nm-math-page .nm-panel,.nm-math-page .nm-guide-article{padding:20px 18px;margin-top:18px;border-radius:14px}
+  .nm-math-page .nm-facts{grid-template-columns:minmax(0,1fr);gap:14px}
+  .nm-math-page .nm-facts dd{font-size:17px}
+  .nm-math-page .nm-actions{gap:8px}.nm-math-page .nm-actions a{flex:1 1 150px;padding:11px 12px}
+  .nm-math-page.subject-page main>.nm-enrollment{width:calc(100% - 32px)}
+  .nm-math-page .nm-guide-article .bs-action>div{padding:16px}
+}
+
+/* Verified branch photos retain the original aspect ratio. */
+.nm-math-page .nm-center-photos{margin:28px 0;padding-top:24px;border-top:1px solid #d4e3ed;scroll-margin-top:110px}
+.nm-math-page .nm-center-photos h3{font-size:22px;line-height:1.5;color:#17324d}
+.nm-math-page .nm-center-photo{margin:16px 0;max-width:880px;border:1px solid #d4e3ed;border-radius:14px;overflow:hidden;background:#f6f9fc}
+.nm-math-page .nm-center-photo img{display:block;width:100%;height:auto;max-height:580px;object-fit:contain;margin:0}
+.nm-math-page .nm-center-photo figcaption{padding:12px 16px;font-size:15px;color:#405c6f;line-height:1.6}
+.nm-math-page .nm-photo-link a{display:inline-block;padding:8px 0;font-weight:700;color:#175e82;text-underline-offset:4px}
+.nm-math-page .nm-map-link{margin:18px 0!important;width:100%!important}

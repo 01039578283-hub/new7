@@ -27,3 +27,6 @@
  .br-refined .mg-faq summary{min-height:48px;font-size:16px;line-height:1.7;padding-top:14px;padding-bottom:14px}
  .br-refined .mg-grid,.br-refined .mg-card,.br-refined .bs-action div{min-width:0}
 }
+
+/* Separate inquiries stay distinct from ordinary grade availability. */
+.br-refined .br-link-inquiry{display:block;padding:5px 9px;border-left:3px solid #b67b16;border-radius:4px;background:#fff4d9;color:#6a470a;font-size:14px;font-weight:600;line-height:1.65;white-space:normal;overflow-wrap:anywhere}

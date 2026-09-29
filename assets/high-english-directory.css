@@ -1,0 +1,7 @@
+/* Shared directory layout is also used by the high-school math listing. */
+@import url("./high-math-directory.css?v=20260928-schools");
+.ne-find-inquiries{display:flex;align-items:flex-start;gap:10px;margin:18px 0 0;color:#17324d;font-size:15px;font-weight:700;line-height:1.6;cursor:pointer}
+.nm-find .ne-find-inquiries input{flex:0 0 24px;width:24px;min-height:24px;height:24px;padding:0;margin:0;accent-color:#175e82}
+.ne-find-inquiry-grades{color:#79520a;background:#fff4d9;border-radius:6px;padding:4px 10px;display:inline-block;font-weight:700}
+.ne-find-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.ne-find-links a{display:inline-flex;align-items:center;min-height:44px;color:#175e82;text-decoration:underline;text-underline-offset:4px;font-weight:700}
