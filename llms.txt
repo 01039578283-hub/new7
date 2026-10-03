@@ -83,3 +83,9 @@
 - [명일동 고등 영어학원](https://xn--zb0b93vh4ggmeqzwda.com/지점안내/서울/명일점/명일동고등학원/영어/): 어휘를 문장에 적용.
 - [명일동 고등 영수학원](https://xn--zb0b93vh4ggmeqzwda.com/지점안내/서울/명일점/명일동고등학원/영수/): 두 과목의 오류 구분.
 - [전체 URL 사이트맵](https://xn--zb0b93vh4ggmeqzwda.com/sitemap.xml)
+
+## 교육정보
+- https://xn--zb0b93vh4ggmeqzwda.com/%EA%B5%90%EC%9C%A1%EC%A0%95%EB%B3%B4/: 시험 준비, 과목 공부, 학습 습관, 학부모 도움과 학원 선택에 관한 30개 글과 기존 학습가이드 49개를 안내합니다.
+
+## 학습커리큘럼
+- https://xn--zb0b93vh4ggmeqzwda.com/%ED%95%99%EC%8A%B5%EC%BB%A4%EB%A6%AC%ED%81%98%EB%9F%BC/: 2026학년도 학년·과목별 공부 범위와 수준별 과제, 고등 과목 선택을 살펴봅니다.

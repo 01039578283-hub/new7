@@ -1,0 +1,51 @@
+/* Homepage coaching additions; shared navigation and other pages stay unchanged. */
+.hwe-section{scroll-margin-top:104px}
+.hwe-table-wrap{margin:24px 0 18px;border:1px solid #c7dce7;border-radius:18px;background:#fff;overflow:hidden}
+.hwe-comparison{width:100%;border-collapse:collapse;table-layout:fixed;font-size:15px;line-height:1.8;color:#294458}
+.hwe-comparison caption{text-align:left;padding:18px 22px;font-weight:750;color:#175e82;background:#edf6fb}
+.hwe-comparison th,.hwe-comparison td{padding:18px 20px;vertical-align:top;text-align:left;overflow-wrap:anywhere}
+.hwe-comparison thead th{background:#175e82;color:white;font-size:16px}
+.hwe-comparison thead th:first-child{width:18%}
+.hwe-comparison tbody th{background:#f3f8fb;color:#17435d;font-weight:750}
+.hwe-comparison tbody th,.hwe-comparison tbody td{border-top:1px solid #dbe7ef}
+.hwe-comparison td:last-child{background:#f7fcfb}
+.hwe-mobile-label{display:none}
+.hwe-note{padding:18px 20px;background:#edf5fa;border-left:3px solid #4b8aac;border-radius:0 12px 12px 0;font-size:14px;line-height:1.9}
+.hwe-four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0}
+.hwe-card{min-width:0;background:#fff;border:1px solid #d4e4ee;border-radius:18px;padding:22px;box-shadow:0 6px 20px #17324d05}
+.hwe-card h3,.hwe-practice h3{font-size:20px;line-height:1.55;margin:14px 0 12px;color:#173e57}
+.hwe-card>p,.hwe-practice>p{line-height:1.9;font-size:15px}
+.hwe-stage{margin:0!important;font-size:15px!important;font-weight:800;color:#175e82}
+.hwe-stage span{display:inline-grid;place-items:center;width:29px;height:29px;margin-right:4px;border-radius:9px;background:#e5f4f7;color:#126879}
+.hwe-prompt{padding:16px 18px;border-radius:12px;background:#edf7f5;color:#255351;font-size:14px!important;line-height:1.9}
+.hwe-prompt strong{display:block;margin-bottom:5px;font-size:14px;color:#17625e}
+.hwe-card .hwe-prompt{padding:13px 14px;margin-bottom:0}
+.hwe-practice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px;align-items:start}
+.hwe-practice{min-width:0;background:#fff;border:1px solid #d4e4ee;border-radius:18px;padding:24px}
+.hwe-photo{margin:0 0 22px}
+.hwe-photo img{width:100%;height:auto!important;object-fit:contain;background:#fff;border-radius:12px}
+.hwe-photo figcaption{font-size:12px;line-height:1.7;color:#526f7d;margin-top:9px}
+.hwe-practice:nth-child(2) .hwe-photo img{width:min(100%,345px);margin:auto}
+.hwe-example-label{color:#4c697a;font-size:13px!important}
+.hwe-planner{list-style:none;padding:0;margin:18px 0;display:grid;gap:12px;counter-reset:planner}
+.hwe-planner li{padding:16px 18px 16px 49px;border:1px solid #d8e7ef;border-radius:12px;position:relative;counter-increment:planner}
+.hwe-planner li::before{content:counter(planner);position:absolute;left:17px;top:16px;color:#1a7188;font-weight:800}
+.hwe-planner strong{color:#175e82;font-size:15px}
+.hwe-planner p{font-size:14px;margin:7px 0 0;line-height:1.9}
+.hwe-exam-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:24px 0}
+@media(max-width:1050px){.hwe-four{grid-template-columns:repeat(2,minmax(0,1fr))}.hwe-comparison th,.hwe-comparison td{padding:16px}.hwe-exam-grid .hwe-card{padding:20px}}
+@media(max-width:700px){
+ .hwe-four,.hwe-practice-grid,.hwe-exam-grid{grid-template-columns:1fr;gap:16px}
+ .hwe-practice,.hwe-card{padding:20px}
+ .hwe-table-wrap{overflow:visible;border-radius:14px}
+ .hwe-comparison,.hwe-comparison tbody{display:block}
+ .hwe-comparison caption{display:block;border-radius:14px 14px 0 0;padding:16px;font-size:14px}
+ .hwe-comparison thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .hwe-comparison tbody tr{display:grid;grid-template-columns:minmax(0,1fr);border-top:1px solid #c7dce7}
+ .hwe-comparison tbody th{display:block;padding:12px 16px;border:0;font-size:15px}
+ .hwe-comparison tbody td{display:block;padding:15px 16px;font-size:14px;border-top:1px solid #e2edf3}
+ .hwe-comparison tbody tr:last-child td:last-child{border-radius:0 0 14px 14px}
+ .hwe-mobile-label{display:block;font-size:12px;font-weight:800;color:#17627d;margin-bottom:5px}
+ .hwe-note{padding:16px;font-size:13px}
+ .hwe-section{scroll-margin-top:94px}
+}
