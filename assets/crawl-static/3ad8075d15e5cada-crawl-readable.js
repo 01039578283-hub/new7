@@ -1,0 +1,62 @@
+(() => {
+  let dialog, image, fitButton, scroller, returnFocus;
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a.crawl-zoom');
+    if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || !('HTMLDialogElement' in window)) return;
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.className = 'crawl-dialog';
+      dialog.setAttribute('aria-labelledby', 'crawl-dialog-title');
+      const toolbar = document.createElement('div');
+      toolbar.className = 'crawl-dialog-toolbar';
+      const title = document.createElement('strong');
+      title.id = 'crawl-dialog-title';
+      title.textContent = '이미지 확대';
+      fitButton = document.createElement('button');
+      fitButton.type = 'button';
+      fitButton.textContent = '원본 크기로 읽기';
+      fitButton.setAttribute('aria-pressed', 'false');
+      const original = document.createElement('a');
+      original.className = 'crawl-dialog-original';
+      original.textContent = '새 창에서 원본 열기';
+      original.target = '_blank';
+      original.rel = 'noopener';
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.textContent = '닫기';
+      close.addEventListener('click', () => dialog.close());
+      fitButton.addEventListener('click', () => {
+        const actual = image.classList.toggle('crawl-actual-size');
+        fitButton.textContent = actual ? '화면 너비에 맞추기' : '원본 크기로 읽기';
+        fitButton.setAttribute('aria-pressed', String(actual));
+      });
+      toolbar.append(title, fitButton, original, close);
+      scroller = document.createElement('div');
+      scroller.className = 'crawl-dialog-scroll';
+      scroller.tabIndex = 0;
+      scroller.setAttribute('aria-label', '확대 이미지. 원본 크기에서는 가로와 세로로 이동할 수 있습니다.');
+      image = document.createElement('img');
+      image.decoding = 'async';
+      scroller.append(image);
+      dialog.append(toolbar, scroller);
+      document.body.append(dialog);
+      dialog.addEventListener('close', () => { image.removeAttribute('src'); returnFocus?.focus({ preventScroll: true }); });
+      dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+    }
+    event.preventDefault();
+    returnFocus = link;
+    image.classList.remove('crawl-actual-size');
+    fitButton.textContent = '원본 크기로 읽기';
+    fitButton.setAttribute('aria-pressed', 'false');
+    const preview = link.querySelector('img');
+    image.alt = preview?.alt || '안내 이미지';
+    image.width = Number(link.dataset.originalWidth || preview?.naturalWidth || 918);
+    image.height = Number(link.dataset.originalHeight || preview?.naturalHeight || 1);
+    image.src = link.href;
+    dialog.querySelector('.crawl-dialog-original').href = link.href;
+    dialog.querySelector('#crawl-dialog-title').textContent = image.alt;
+    scroller.scrollTop = 0;
+    scroller.scrollLeft = 0;
+    dialog.showModal();
+  });
+})();

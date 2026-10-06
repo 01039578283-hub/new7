@@ -3,6 +3,24 @@
   "trailingSlash": true,
   "headers": [
     {
+      "source": "/assets/crawl-static/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/crawl-media/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
       "source": "/rss.xml",
       "headers": [
         {
@@ -11,7 +29,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
+          "value": "public, max-age=0, must-revalidate"
         },
         {
           "key": "X-Content-Type-Options",
@@ -21,5 +39,47 @@
     }
   ],
   "buildCommand": "node build-public.mjs && node wawa-analytics-build.mjs wawa-08 .public-release && node seo-descriptions.mjs --root=.public-release",
-  "outputDirectory": ".public-release"
+  "outputDirectory": ".public-release",
+  "redirects": [
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EB%8B%A4%EC%82%B0%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EB%8B%A4%EC%82%B0%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EB%91%94%EC%82%B0%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EB%91%94%EC%82%B0%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%86%A1%EB%8F%84%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%86%A1%EB%8F%84%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%88%98%EC%A7%80%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%88%98%EC%A7%80%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%9D%80%ED%8F%89%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%9D%80%ED%8F%89%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%A4%91%EB%8F%99%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%EC%A4%91%EB%8F%99%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%ED%99%94%EC%A0%95%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%ED%99%94%EC%A0%95%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    },
+    {
+      "source": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%ED%9B%84%EA%B3%A1%EC%A0%90\\(W\\+\\)/",
+      "destination": "/%EC%84%A0%EC%83%9D%EB%8B%98%EC%B0%BE%EA%B8%B0/%ED%9B%84%EA%B3%A1%EC%A0%90%28W%2B%29/",
+      "statusCode": 308
+    }
+  ]
 }

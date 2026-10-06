@@ -1,0 +1,3 @@
+# Keep versioned cache assets byte-identical across Windows authoring and builds.
+assets/crawl-static/* -text
+assets/crawl-media/* -text

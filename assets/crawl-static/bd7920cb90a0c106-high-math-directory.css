@@ -1,0 +1,38 @@
+.nm-find{color:#17324d;min-width:0}
+.nm-find [hidden]{display:none!important}
+.nm-find-head{margin-bottom:22px}
+.nm-find h2{font-size:clamp(24px,3vw,32px);line-height:1.45;margin:0 0 12px;word-break:keep-all;overflow-wrap:anywhere}
+.nm-find p{line-height:1.75;word-break:keep-all;overflow-wrap:anywhere}
+.nm-find-form{padding:24px;background:#edf6fa;border:1px solid #c9e0e9;border-radius:18px;margin:24px 0}
+.nm-find-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto;gap:14px;align-items:end}
+.nm-find-field{display:grid;gap:8px;min-width:0;font-weight:750;font-size:14px}
+.nm-find input,.nm-find select{width:100%;min-width:0;min-height:48px;padding:11px 12px;border:1px solid #a6c4d3;border-radius:9px;background:#fff;color:#17324d;font:inherit;font-size:16px}
+.nm-find button{min-height:48px;padding:10px 16px;border:1px solid #9dbdce;border-radius:9px;background:#fff;color:#175e82;font:inherit;font-weight:750;cursor:pointer}
+.nm-find button[type=reset]{background:#175e82;color:#fff;border-color:#175e82}
+.nm-find input:focus-visible,.nm-find select:focus-visible,.nm-find button:focus-visible,.nm-find a:focus-visible,.nm-find summary:focus-visible{outline:3px solid #1681ab;outline-offset:4px}
+.nm-find-tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:16px}
+.nm-find-tools p{margin:0 0 0 auto;font-size:14px;font-weight:700}
+.nm-find-help{font-size:14px;color:#526a7a;margin:14px 0 0}
+.nm-find-empty{padding:22px;border:1px dashed #9bb8c9;border-radius:12px;background:#f9fcff;line-height:1.8}
+.nm-find-group{border:1px solid #cbdfe9;border-radius:15px;background:#fff;margin:14px 0;scroll-margin-top:110px;overflow:hidden}
+.nm-find-group>summary{display:flex;align-items:center;gap:16px;justify-content:space-between;padding:20px 24px;cursor:pointer;list-style:none;background:#f3f8fc}
+.nm-find-group>summary::-webkit-details-marker{display:none}
+.nm-find-group>summary::after{content:'+';font-size:26px;color:#175e82}
+.nm-find-group[open]>summary::after{content:'−'}
+.nm-find-group>summary h3{font-size:21px;margin:0;line-height:1.4}
+.nm-find-group>summary span{font-size:14px;font-weight:500;color:#526a7a;margin-left:auto}
+.nm-find-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:20px}
+.nm-find-card{border:1px solid #dbe6ed;border-radius:12px;padding:20px;min-width:0;background:#fff;display:flex;flex-direction:column}
+.nm-find-card h4{font-size:20px;margin:0 0 10px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere}
+.nm-find-card h4 a{color:#175e82;text-decoration:underline;text-underline-offset:4px}
+.nm-find-card p{font-size:15px;margin:0 0 10px}
+.nm-find-card .nm-find-center{font-size:16px;font-weight:750}
+.nm-find-grade{display:inline-block;color:#13556f;background:#edf6fa;padding:4px 10px;border-radius:6px;font-weight:700}
+.nm-find-note{border-left:3px solid #a8c7d6;padding-left:12px;color:#506a7a}
+.nm-find-schools{border-top:1px solid #e0e9ef;margin-top:8px;padding-top:10px}
+.nm-find-schools summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:700;color:#375f77}
+.nm-find-schools summary::before{content:'▸';margin-right:8px}
+.nm-find-schools[open] summary::before{content:'▾'}
+.nm-find-card .nm-find-school-names{font-size:14px;color:#526a7a}
+@media(max-width:900px){.nm-find-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.nm-find-field:first-child{grid-column:1/-1}.nm-find-fields>button{grid-column:1/-1}.nm-find-group>summary{flex-wrap:wrap;gap:8px}.nm-find-group>summary span{margin:0 auto 0 8px}}
+@media(max-width:600px){.nm-find-form{padding:16px}.nm-find-fields{grid-template-columns:1fr}.nm-find-field:first-child{grid-column:auto}.nm-find-tools p{width:100%;margin:4px 0 0}.nm-find-grid{grid-template-columns:1fr;padding:12px;gap:12px}.nm-find-card{padding:16px}.nm-find-group>summary{padding:16px}.nm-find-group>summary span{font-size:12px}.nm-find-group>summary h3{font-size:19px}}
