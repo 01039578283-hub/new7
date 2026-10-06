@@ -7,10 +7,13 @@ const output = path.join(root, '.public-release');
 if (fs.existsSync(output)) throw new Error('Archive the previous validated output before building a fresh release.');
 fs.mkdirSync(output);
 let files=0, pages=0;
+const copyJobs=[], preparedDirectories=new Set();
 const copy = rel => {
   const src=path.join(root,rel), dest=path.join(output,rel);
   if (fs.lstatSync(src).isSymbolicLink()) throw new Error('Symlink in public assets');
-  fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(src,dest);files++;
+  const directory=path.dirname(dest);
+  if(!preparedDirectories.has(directory)) {fs.mkdirSync(directory,{recursive:true});preparedDirectories.add(directory);}
+  copyJobs.push({src,dest});files++;
   if (path.basename(rel)==='index.html') pages++;
 };
 const walk = (dir,accept) => {
@@ -30,7 +33,7 @@ const teacherBranches=teacherManifest.branches;
 if(teacherBranches.length!==205 || new Set(teacherBranches.map(b=>b.path)).size!==205 || teacherBranches.reduce((n,b)=>n+b.profiles.length,0)!==1002)throw new Error('Teacher profile manifest mismatch');
 const educationManifest=JSON.parse(fs.readFileSync(path.join(root,'education-info.json'),'utf8'));
 const educationArticles=educationManifest.articles;
-if(educationArticles.length!==30 || new Set(educationArticles.map(a=>a.path)).size!==30 || educationArticles.some(a=>a.images.length!==3) || new Set(educationArticles.flatMap(a=>a.images.map(i=>i.path))).size!==90)throw new Error('Education article/image manifest mismatch');
+if(educationArticles.length!==60 || new Set(educationArticles.map(a=>a.path)).size!==60 || educationArticles.some(a=>a.images.length!==3) || new Set(educationArticles.flatMap(a=>a.images.map(i=>i.path))).size!==180)throw new Error('Education article/image manifest mismatch');
 const curriculumManifest=JSON.parse(fs.readFileSync(path.join(root,'curriculum-data.json'),'utf8'));
 const curriculumPages=curriculumManifest.pages;
 if(curriculumPages.length!==80 || new Set(curriculumPages.map(p=>p.path)).size!==80 || curriculumManifest.subjects.length!==66 || curriculumManifest.grades.length!==12 || curriculumManifest.levels.length!==45 || curriculumManifest.electives.length!==29)throw new Error('Curriculum manifest mismatch');
@@ -38,6 +41,8 @@ const worksheets=new Set(guideSlugs.map(slug=>`assets/learning-guides/records/${
 walk('assets',(n,rel)=>extensions.has(path.extname(n).toLowerCase()) || worksheets.has(rel.replaceAll('\\','/')));
 for(const name of ['index.html','sitemap.xml','rss.xml','robots.txt','llms.txt'])copy(name);
 for(const name of fs.readdirSync(root))if(/^(?:google|naver)[a-z0-9]+\.html$/i.test(name))copy(name);
+// Bound filesystem concurrency while retaining the same checked public allowlist.
+for(let i=0;i<copyJobs.length;i+=32)await Promise.all(copyJobs.slice(i,i+32).map(({src,dest})=>fs.promises.copyFile(src,dest)));
 const expected=(fs.readFileSync(path.join(root,'sitemap.xml'),'utf8').match(/<loc>/g)||[]).length;
 if(pages!==expected || pages!==8755+guideSlugs.length+teacherBranches.length+1+educationArticles.length+1+curriculumPages.length)throw new Error(`Page inventory mismatch: ${pages}/${expected}`);
 for(const curriculum of curriculumPages)if(!fs.existsSync(path.join(output,curriculum.path.slice(1),'index.html')))throw new Error(`Missing curriculum: ${curriculum.path}`);
