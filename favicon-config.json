@@ -1,0 +1,9 @@
+{
+  "domain": "학습관리학원.com",
+  "outputDirectory": ".public-release",
+  "previousBuildCommand": "node build-public.mjs && node wawa-analytics-build.mjs wawa-08 .public-release && node seo-descriptions.mjs --root=.public-release",
+  "assets": {
+    "assets/site-favicon.png": "fda0ba8a3881af4a81c86aae625048141d2d77fb667b679dfb6c7a71a625519a",
+    "assets/site-apple-touch-icon.png": "8321420d68a437ebf03d715a7a218d0c4770e09bf0d3af961fb7734f19f62068"
+  }
+}
