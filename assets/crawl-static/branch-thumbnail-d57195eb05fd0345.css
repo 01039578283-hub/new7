@@ -1,0 +1,12 @@
+/* Only reviewed branch-photo pages load this stylesheet. */
+.branch-photo-section{box-sizing:border-box;max-width:1080px;margin:36px auto 28px;padding:28px;background:#fff;border:1px solid #d4e1ec;border-radius:20px;color:#17324d;text-align:left}
+.branch-photo-section h2,.branch-photo-heading{font-size:23px;line-height:1.5;margin:0 0 20px;font-weight:750;letter-spacing:-.03em}
+.branch-photo-heading small{display:block;color:#16749e;font-size:12px;letter-spacing:.12em;margin-bottom:8px;font-weight:500}
+.branch-photo-heading strong{font-size:22px}
+.branch-photo-section figure{margin:0;max-width:900px}
+.branch-photo-section a{display:block;border-radius:12px;overflow:hidden}
+.branch-photo-section img,.mg-space img[data-thumbnail-primary],#center-photos img[data-thumbnail-primary]{display:block;width:100%;height:auto;max-height:none;max-width:100%;object-fit:contain}
+.branch-photo-section figcaption{line-height:1.7;margin-top:12px;color:#405d74;font-size:15px}
+.branch-photo-note{font-size:14px;line-height:1.75;color:#526879;margin:10px 0 0}
+section.mg-space>.mg-grid{margin-top:20px}
+@media(max-width:640px){.branch-photo-section{margin:28px 0 22px;padding:18px;border-radius:16px}.branch-photo-section h2,.branch-photo-heading{font-size:20px}.branch-photo-section figcaption{font-size:14px}}
