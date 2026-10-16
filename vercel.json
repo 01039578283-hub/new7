@@ -3,7 +3,7 @@
   "trailingSlash": true,
   "headers": [
     {
-      "source": "/assets/kakao-maps/:path*",
+      "source": "/assets/kakao-maps/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
