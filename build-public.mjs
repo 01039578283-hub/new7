@@ -14,7 +14,7 @@ const copy = rel => {
   const directory=path.dirname(dest);
   if(!preparedDirectories.has(directory)) {fs.mkdirSync(directory,{recursive:true});preparedDirectories.add(directory);}
   copyJobs.push({src,dest});files++;
-  if (path.basename(rel)==='index.html') pages++;
+  if (path.basename(rel)==='index.html' && !rel.replaceAll('\\','/').startsWith('assets/')) pages++;
 };
 const walk = (dir,accept) => {
   for (const e of fs.readdirSync(path.join(root,dir),{withFileTypes:true})) {
@@ -38,11 +38,16 @@ const curriculumManifest=JSON.parse(fs.readFileSync(path.join(root,'curriculum-d
 const curriculumPages=curriculumManifest.pages;
 if(curriculumPages.length!==80 || new Set(curriculumPages.map(p=>p.path)).size!==80 || curriculumManifest.subjects.length!==66 || curriculumManifest.grades.length!==12 || curriculumManifest.levels.length!==45 || curriculumManifest.electives.length!==29)throw new Error('Curriculum manifest mismatch');
 const worksheets=new Set(guideSlugs.map(slug=>`assets/learning-guides/records/${slug}.txt`));
-walk('assets',(n,rel)=>extensions.has(path.extname(n).toLowerCase()) || worksheets.has(rel.replaceAll('\\','/')));
+const mapManifest=JSON.parse(fs.readFileSync(path.join(root,'kakao-directions.json'),'utf8'));
+const mapFrames=new Set(mapManifest.frames.map(f=>f.file));
+if(mapFrames.size!==198 || [...mapFrames].some(f=>!/^assets\/kakao-maps\/[a-z0-9]+-[a-f0-9]{12}\/index\.html$/.test(f)))throw Error('Unreviewed map frame manifest');
+walk('assets',(n,rel)=>extensions.has(path.extname(n).toLowerCase()) || worksheets.has(rel.replaceAll('\\','/')) || mapFrames.has(rel.replaceAll('\\','/')));
+
 for(const name of ['index.html','sitemap.xml','rss.xml','robots.txt','llms.txt'])copy(name);
 for(const name of fs.readdirSync(root))if(/^(?:google|naver)[a-z0-9]+\.html$/i.test(name))copy(name);
 // Bound filesystem concurrency while retaining the same checked public allowlist.
 for(let i=0;i<copyJobs.length;i+=32)await Promise.all(copyJobs.slice(i,i+32).map(({src,dest})=>fs.promises.copyFile(src,dest)));
+for(const frame of mapFrames)if(!fs.existsSync(path.join(output,frame)))throw Error('Missing map frame '+frame);
 const expected=(fs.readFileSync(path.join(root,'sitemap.xml'),'utf8').match(/<loc>/g)||[]).length;
 if(pages!==expected || pages!==8755+guideSlugs.length+teacherBranches.length+1+educationArticles.length+1+curriculumPages.length)throw new Error(`Page inventory mismatch: ${pages}/${expected}`);
 for(const curriculum of curriculumPages)if(!fs.existsSync(path.join(output,curriculum.path.slice(1),'index.html')))throw new Error(`Missing curriculum: ${curriculum.path}`);

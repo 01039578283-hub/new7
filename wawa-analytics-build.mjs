@@ -10,7 +10,7 @@ const tag=`<script defer src="https://wawa-visit-collector.clean-peach-8202.chat
 const skip=new Set(['node_modules','tools','scripts','tmp','temp','audit','audit-output','reports','backups','backup','source','src','drizzle','test','tests']);
 let documents=0, changed=0, present=0, skipped=0;
 const errors=[];
-const allowed=f=>!f.split(/[\\/]/).some(p=>p.startsWith('.')||skip.has(p));
+const allowed=f=>!f.replaceAll('\\','/').startsWith('assets/kakao-maps/')&&!f.split(/[\\/]/).some(p=>p.startsWith('.')||skip.has(p));
 async function files() {
   if(root===process.cwd() && fs.existsSync(path.join(root,'.git'))) {
     try {
@@ -35,6 +35,7 @@ async function files() {
   return result;
 }
 async function update(file) {
+    if(!allowed(path.relative(root,file))) {skipped++;return;}
     const original=await fs.promises.readFile(file), html=original.toString('utf8');
     if(!Buffer.from(html).equals(original)) {errors.push(`Non-UTF8 HTML: ${path.relative(root,file)}`);return;}
     if(!/<html[\s>]/i.test(html)) {skipped++;return;}
