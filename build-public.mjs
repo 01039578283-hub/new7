@@ -44,6 +44,10 @@ if(mapFrames.size!==198 || [...mapFrames].some(f=>!/^assets\/kakao-maps\/[a-z0-9
 walk('assets',(n,rel)=>extensions.has(path.extname(n).toLowerCase()) || worksheets.has(rel.replaceAll('\\','/')) || mapFrames.has(rel.replaceAll('\\','/')));
 
 for(const name of ['index.html','sitemap.xml','rss.xml','robots.txt','llms.txt'])copy(name);
+// Exact public ownership file for the documented IndexNow protocol; no arbitrary TXT publishing.
+const indexNowKeyFile='411211e46d5a956f449ce91c330a2166.txt';
+if(fs.readFileSync(path.join(root,indexNowKeyFile),'utf8')!==indexNowKeyFile.slice(0,-4))throw Error('Invalid IndexNow ownership file');
+copy(indexNowKeyFile);
 for(const name of fs.readdirSync(root))if(/^(?:google|naver)[a-z0-9]+\.html$/i.test(name))copy(name);
 // Bound filesystem concurrency while retaining the same checked public allowlist.
 for(let i=0;i<copyJobs.length;i+=32)await Promise.all(copyJobs.slice(i,i+32).map(({src,dest})=>fs.promises.copyFile(src,dest)));
